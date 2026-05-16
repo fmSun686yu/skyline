@@ -1,0 +1,11 @@
+# ============================================================
+# skyline
+# .gitignore for mohomo-configs
+# Mihomo and Shadowrocket configuration repository
+# ============================================================
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore environment variable files
+.env
