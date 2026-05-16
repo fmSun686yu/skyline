@@ -1,0 +1,740 @@
+# ==============================================
+# Clash 配置文件
+# 适用于:
+#   Windows 平台：Clash Party、Clash Verge、FIClash 等
+#   macOS 平台：Clash Verge 等
+#
+# 作者：fmSun686yu
+# 版本：v1.0.2
+# 日期：5.11.2026
+# ==============================================
+
+# 端口配置
+port: 7890           # 本地 HTTP 代理端口
+socks-port: 7891     # 本地 SOCKS5 代理端口
+mixed-port: 7892     # 混合端口（HTTP + SOCKS5 合并端口）（可选）
+redir-port: 7893     # Linux / macOS 下的透明代理端口（可选）
+tproxy-port: 7894    # Linux TProxy 端口（可选）
+
+allow-lan: false                # 是否允许局域网设备使用代理
+bind-address: 127.0.0.1         # 绑定的网络接口，默认所有接口，此处限制为127.0.0.1增强安全
+
+# 运行模式，可选：global、rule、direct
+mode: rule                      # 默认规则模式，按规则分流
+
+ipv6: true                      # 是否启用 IPv6
+
+unified-delay: true             # 是否开启全局统一延迟处理（开启可提高测速稳定性）
+
+# GUI 缓存功能
+profile:
+  store-selected: true          # Stores API selections for strategy groups for use on the next start
+  store-fake-ip: true           # Stores the fakeip mapping table, using the original mapping address when the domain connects again
+
+# 配置 Clash Dashboard
+external-controller: '127.0.0.1:9090'   # 控制端口，Dashboard 和 REST API 使用
+secret: 'your_secret_here'              # 可选：用于 Dashboard 的访问密码
+
+# 日志配置
+log-level: info     # 可选：trace / debug / info / warning / error
+
+# TUN 配置（全局透明代理）
+tun:
+  enable: true                          # 是否开启 TUN 模式（虚拟网卡透明代理）
+  stack: system                         # 使用的 TUN 栈类型：system（系统默认），macOS/Windows 一般用 system
+  mtu: 3000                             # TUN 网卡 MTU（最大传输单元），可提高大流量传输性能
+
+# ========================================
+# DNS 配置
+# ========================================
+dns:
+  enable: true                          # 是否启用 Clash 内置 DNS 解析
+  cache-algorithm: arc                  # DNS 缓存算法，可选 lru / arc（ARC 更智能，高性能）
+  use-hosts: true                       # 是否启用 hosts 文件中自定义域名
+  use-system-hosts: false               # 是否使用系统 hosts 文件（Windows/macOS/Linux）
+  respect-rules: true                   # 是否让 DNS 解析遵循 Clash 规则（true: 按规则分流解析）
+  listen: 0.0.0.0:1053                  # DNS 监听端口，0.0.0.0 表示所有网络接口
+  ipv6: true                            # 是否解析 IPv6 地址
+  
+  # 高级模式，可选 fake-ip / redir-host
+  # fake-ip: 给域名分配虚拟 IP，配合 TUN 或规则分流使用
+  # redir-host: 按域名代理流量，不使用虚拟 IP
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16          # fake-ip 虚拟 IP 段，用于映射域名
+  fake-ip-range6: fdfe:dcba:9876::1/64  # IPv6 fake-ip 段（可选）
+  fake-ip-filter-mode: blacklist        # fake-ip 过滤模式：blacklist 或 whitelist
+  fake-ip-filter:                       # fake-ip 过滤列表
+    - '*.lan'                           # 匹配 *.lan 域名，不使用 fake-ip
+    - 'time.windows.com'
+    - 'time.apple.com'
+    - 'time.asia.apple.com'
+    - 'time.nist.gov'
+    - 'stun.*.*.*'                      # STUN 服务，不使用 fake-ip
+    - 'stun.*.*'                        # STUN 服务，不使用 fake-ip
+    - '*.ntp.org.cn'                    # 中国 NTP 时间同步服务，不使用 fake-ip
+    - '*.openwrt.pool.ntp.org'          # OpenWrt NTP 时间同步，不使用 fake-ip
+    - 'time1.cloud.tencent.com'         # 腾讯云 NTP，不使用 fake-ip
+    - 'time.ustc.edu.cn'                # 中国科技大学 NTP
+    - 'pool.ntp.org'                    # 全球 NTP 池
+    - 'ntp.ubuntu.com'                  # Ubuntu 时间同步
+    - 'ntp.aliyun.com'                  # 阿里云 NTP
+    - 'ntp1.aliyun.com'
+    - 'ntp2.aliyun.com'
+    - 'ntp3.aliyun.com'
+    - 'ntp4.aliyun.com'
+    - 'ntp5.aliyun.com'
+    - 'ntp6.aliyun.com'
+    - 'ntp7.aliyun.com'
+    - 'time1.aliyun.com'
+    - 'time2.aliyun.com'
+    - 'time3.aliyun.com'
+    - 'time4.aliyun.com'
+    - 'time5.aliyun.com'
+    - 'time6.aliyun.com'
+    - 'time7.aliyun.com'
+    - '*.time.edu.cn'
+    - 'time1.apple.com'
+    - 'time2.apple.com'
+    - 'time3.apple.com'
+    - 'time4.apple.com'
+    - 'time5.apple.com'
+    - 'time6.apple.com'
+    - 'time7.apple.com'
+    - 'time1.google.com'
+    - 'time2.google.com'
+    - 'time3.google.com'
+    - 'time4.google.com'
+    - 'music.163.com'
+    - '*.music.163.com'
+    - '*.126.net'
+    - 'musicapi.taihe.com'
+    - 'music.taihe.com'
+    - 'songsearch.kugou.com'
+    - 'trackercdn.kugou.com'
+    - '*.kuwo.cn'
+    - 'api-jooxtt.sanook.com'
+    - 'api.joox.com'
+    - 'joox.com'
+    - 'y.qq.com'
+    - '*.y.qq.com'
+    - 'streamoc.music.tc.qq.com'
+    - 'mobileoc.music.tc.qq.com'
+    - 'isure.stream.qqmusic.qq.com'
+    - 'dl.stream.qqmusic.qq.com'
+    - 'aqqmusic.tc.qq.com'
+    - 'amobile.music.tc.qq.com'
+    - '*.xiami.com'
+    - '*.music.migu.cn'
+    - 'music.migu.cn'
+    - '*.msftconnecttest.com'
+    - '*.msftncsi.com'
+    - 'localhost.ptlogin2.qq.com'
+    - '*.*.*.srv.nintendo.net'
+    - '*.*.stun.playstation.net'
+    - 'xbox.*.*.microsoft.com'
+    - '*.ipv6.microsoft.com'
+    - '*.*.xboxlive.com'
+    - 'speedtest.cros.wr.pvp.net'
+
+  default-nameserver:                   # Default DNS, used for resolving the domain names of DNS servers.
+    - 8.8.8.8                           # Google DNS
+    - 8.8.4.4                           # Google DNS
+    - 1.1.1.1                           # Cloudflare DNS
+    - 1.0.0.1                           # Cloudflare DNS
+    - 9.9.9.9                           # Quad9  DNS
+    - 149.112.112.112                   # Quad9  DNS
+    - 223.5.5.5                         # 阿里公共 DNS
+    - 223.6.6.6                         # 阿里公共 DNS
+    - 114.114.114.114                   # 114 DNS
+    - 114.114.115.115                   # 114 DNS
+    - 119.29.29.29                      # 腾讯 DNS
+    - 182.254.116.116                   # 腾讯 DNS
+    - 180.76.76.76                      # 百度 DNS
+
+  # --------------------------------------------------------
+  # 配置查询域名使用的 DNS 服务器
+  # 用于按域名分类指定专用 DNS
+  # 优先级高于普通 nameserver / fallback
+  # --------------------------------------------------------
+  nameserver-policy:
+    # 私有域名 / 内网域名交给路由器或本地 DNS
+    "geosite:private":
+      - 192.168.2.1                     # 此处填写主路由器 IP
+
+    # 中国大陆公网域名使用国内 DNS
+    # DoH + 普通 DNS 组合，提高稳定性
+    "geosite:cn":
+      - https://dns.alidns.com/dns-query  # 阿里 DoH
+      - https://223.5.5.5/dns-query       # 阿里 DoH
+      - 223.5.5.5                         # 阿里 DNS
+      - 223.6.6.6                         # 阿里 DNS
+      - 114.114.114.114                   # 114 DNS
+      - 114.114.115.115                   # 114 DNS
+      - https://doh.pub/dns-query         # 腾讯 DNSPod DoH
+      - https://1.12.12.12/dns-query      # 腾讯 DoH
+      - https://dns.qq.com/dns-query      # 腾讯 DoH
+      - 119.29.29.29                      # 腾讯 DNS
+      - 180.76.76.76                      # 百度 DNS
+
+  nameserver:                           # Default domain name resolution server.
+    - 8.8.8.8                           # Google DNS
+    - 8.8.4.4                           # Google DNS
+    - https://dns.google/dns-query      # Google DoH
+    - tls://dns.google                  # Google DoT
+    - 1.1.1.1                                   # Cloudflare DNS
+    - 1.0.0.1                                   # Cloudflare DNS
+    - https://cloudflare-dns.com/dns-query      # Cloudflare DoH
+    - tls://1.1.1.1                             # Cloudflare DoT
+    - 9.9.9.9                           # Quad9 DNS
+    - 149.112.112.112                   # Quad9 DNS
+    - https://dns.quad9.net/dns-query   # Quad9 DoH
+    - 208.67.222.222                    # OpenDNS DNS
+    - 208.67.220.220                    # OpenDNS DNS
+    - https://doh.opendns.com/dns-query # OpenDNS DoH
+    - 84.200.69.80                      # DNS.WATCH DNS
+    - 84.200.70.40                      # DNS.WATCH DNS
+    - 8.26.56.2                         # Comodo DNS
+    - 68.20.247.2                       # Comodo DNS
+    - 223.5.5.5                         # 阿里 DNS
+    - 223.6.6.6                         # 阿里 DNS
+    - https://dns.alidns.com/dns-query  # 阿里 DoH
+    - https://223.5.5.5/dns-query       # 阿里 DoH
+    - 114.114.114.114                   # 114 DNS
+    - 114.114.115.115                   # 114 DNS
+    - 119.29.29.29                      # 腾讯 DNS
+    - https://doh.pub/dns-query         # 腾讯 DNSPod DoH
+    - https://1.12.12.12/dns-query      # 腾讯 DoH
+    - https://dns.qq.com/dns-query      # 腾讯 DoH
+    - 180.76.76.76                      # 百度 DNS
+
+  fallback:                             # 备用 DNS，当 nameserver 无响应时使用
+    - 8.8.8.8                                   # Google DNS
+    - 8.8.4.4                                   # Google DNS
+    - https://dns.google/dns-query              # Google DoH
+    - 1.1.1.1                                   # Cloudflare DNS
+    - 1.0.0.1                                   # Cloudflare DNS
+    - https://cloudflare-dns.com/dns-query      # Cloudflare DoH
+
+  fallback-filter:                      # 备用 DNS 过滤条件，用于选择哪些域名走 fallback
+
+  # The proxy node domain resolution server is used solely for resolving the domain names of proxy nodes.
+  # If left blank, it will follow the configurations of nameserver-policy, nameserver, and fallback.
+  proxy-server-nameserver:
+    - 223.5.5.5                         # 阿里 DNS
+    - 223.6.6.6                         # 阿里 DNS
+    - https://dns.alidns.com/dns-query  # 阿里 DoH
+    - https://223.5.5.5/dns-query       # 阿里 DoH
+    - 119.29.29.29                      # 腾讯 DNS
+    - https://doh.pub/dns-query         # 腾讯 DNSPod DoH
+
+# sniffing:
+#   enable: true                # 是否开启嗅探模式（自动分流）
+#   dest-port: 80,443           # 需要嗅探的端口
+
+# ========================================
+# 代理节点配置（Proxies）
+# ========================================
+proxies:
+  - name: USA-San Francisco	- Static Native ISP     # 节点名称（可自定义）
+    type: socks5                                    # 节点类型，SOCKS5 代理
+    dialer-proxy: chain-hop1-entry                  # 拨号代理（可选），如果这个节点需要通过另一个代理连接。
+
+    server: server                                  # 节点服务器地址（域名或 IP）
+    port: port                                      # 节点服务器端口
+
+    username: username                              # SOCKS5 验证用户名（如果需要）
+    password: password                              # SOCKS5 验证密码（如果需要）
+
+    ip-version: auto                                # IP 协议版本，ipv4 / ipv6 / auto
+    udp: true                                       # 是否支持 UDP 转发（重要，视频/游戏需要开启）
+    interface-name: eth0                            # 本地网卡绑定（可选，用于多网卡场景）
+    tfo: false                                      # TCP Fast Open 开关（提高连接速度，可选）
+    mptcp: false                                    # 是否启用多路径 TCP（Multipath TCP，可提升吞吐量）
+
+  # 快速注释：选中多行 → Cmd + /
+  # 再次按下 Cmd + / 取消注释
+
+  # - name: "ss"                    # 节点名称，可自定义
+  #   type: ss                      # 节点类型，Shadowsocks
+  #   server: server                # 节点服务器地址（域名或 IP）
+  #   port: 443                     # 节点服务器端口
+  #   ip-version: ipv4              # IP 协议版本，ipv4 / ipv6 / auto
+  #   udp: true                     # 是否支持 UDP 转发（重要，视频/游戏需要开启）
+  #   interface-name: eth0          # 本地网卡绑定（可选，用于多网卡场景）
+  #   routing-mark: 1234            # Linux 下用于策略路由的标记（iptables MARK）
+  #   tfo: false                    # TCP Fast Open 开关（提高连接速度，可选）
+  #   mptcp: false                  # 是否启用多路径 TCP（Multipath TCP，可提升吞吐量）
+
+  #   dialer-proxy: ss1             # 拨号代理（可选），如果这个节点需要通过另一个代理连接。例如 ss 节点通过 ss1 代理访问服务器
+
+# ============================================================
+# 节点订阅提供者（Proxy Providers）
+# ============================================================
+proxy-providers:
+  my-subscription-1:                                          # 订阅提供者1
+    type: http
+    url: https://example.com/proxyproviders/subscription1     # 订阅链接地址
+    path: ./proxy_providers/my-subscription-1.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
+    interval: 10800                                           # 每隔10800秒（3小时）更新订阅
+    proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600                                           # 每隔600秒测试一次订阅节点的健康状况
+      timeout: 5000                                           # 健康检查超时时间，单位毫秒
+      lazy: true                                              # 懒惰测试，只有当订阅节点被使用时才进行健康检查，可减少资源消耗
+      expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    override:
+      additional-prefix: "[SUB-1]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-1]"
+
+  my-subscription-2:                                          # 订阅提供者2
+    type: http
+    url: https://example.com/proxyproviders/subscription2     # 订阅链接地址
+    path: ./proxy_providers/my-subscription-2.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
+    interval: 10800                                           # 每隔10800秒（3小时）更新订阅
+    proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600                                           # 每隔600秒测试一次订阅节点的健康状况
+      timeout: 5000                                           # 健康检查超时时间，单位毫秒
+      lazy: true                                              # 懒惰测试，只有当订阅节点被使用时才进行健康检查，可减少资源消耗
+      expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    override:
+      additional-prefix: "[SUB-2]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-2]"
+
+  my-subscription-3:                                          # 订阅提供者3
+    type: http
+    url: https://example.com/proxyproviders/subscription3     # 订阅链接地址
+    path: ./proxy_providers/my-subscription-3.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
+    interval: 10800                                           # 每隔10800秒（3小时）更新订阅
+    proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600                                           # 每隔600秒测试一次订阅节点的健康状况
+      timeout: 5000                                           # 健康检查超时时间，单位毫秒
+      lazy: true                                              # 懒惰测试，只有当订阅节点被使用时才进行健康检查，可减少资源消耗
+      expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    override:
+      additional-prefix: "[SUB-3]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-3]"
+
+  my-subscription-4:                                          # 订阅提供者4
+    type: http
+    url: https://example.com/proxyproviders/subscription4     # 订阅链接地址
+    path: ./proxy_providers/my-subscription-4.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
+    interval: 10800                                           # 每隔10800秒（3小时）更新订阅
+    proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600                                           # 每隔600秒测试一次订阅节点的健康状况
+      timeout: 5000                                           # 健康检查超时时间，单位毫秒
+      lazy: true                                              # 懒惰测试，只有当订阅节点被使用时才进行健康检查，可减少资源消耗
+      expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    override:
+      additional-prefix: "[SUB-4]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-4]"
+
+  my-subscription-5:                                          # 订阅提供者5
+    type: http
+    url: https://example.com/proxyproviders/subscription5     # 订阅链接地址
+    path: ./proxy_providers/my-subscription-5.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
+    interval: 10800                                           # 每隔10800秒（3小时）更新订阅
+    proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600                                           # 每隔600秒测试一次订阅节点的健康状况
+      timeout: 5000                                           # 健康检查超时时间，单位毫秒
+      lazy: true                                              # 懒惰测试，只有当订阅节点被使用时才进行健康检查，可减少资源消耗
+      expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    override:
+      additional-prefix: "[SUB-5]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-5]"
+
+  my-subscription-6:                                          # 订阅提供者6
+    type: http
+    url: https://example.com/proxyproviders/subscription6     # 订阅链接地址
+    path: ./proxy_providers/my-subscription-6.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
+    interval: 10800                                           # 每隔10800秒（3小时）更新订阅
+    proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 600                                           # 每隔600秒测试一次订阅节点的健康状况
+      timeout: 5000                                           # 健康检查超时时间，单位毫秒
+      lazy: true                                              # 懒惰测试，只有当订阅节点被使用时才进行健康检查，可减少资源消耗
+      expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    override:
+      additional-prefix: "[SUB-6]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-6]"
+
+# ========================================
+# 策略组（Proxy Groups）
+# ========================================
+proxy-groups:
+  - name: chain-hop2-exit                           # 链式代理第2跳节点，出口节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - USA-San Francisco	- Static Native ISP
+
+  - name: chain-hop1-entry                          # 链式代理第1跳节点，入口节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+      
+# =========================================================================================
+
+  - name: Manually Select Nodes
+    type: select                                    # 手动选择节点
+    proxies:
+    use:
+      # - my-subscription-1
+      - my-subscription-2
+      - my-subscription-3
+      # - my-subscription-4
+      # - my-subscription-5
+      # - my-subscription-6
+
+  - name: Auto Select Nodes
+    type: url-test                                  # 自动选择延迟最低的节点
+    url: https://www.gstatic.com/generate_204
+    interval: 600                                   # 每隔600秒测试一次
+    tolerance: 50                                   # 切换容忍度，单位毫秒。例如 tolerance: 50 表示新节点至少比当前节点快约 50ms 才更容易切换，可以减少频繁跳节点的情况，提供更稳定的体验。
+    lazy: true                                      # 懒惰测试，只有该组被使用时才进行测试，可减少资源消耗
+    expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    proxies:
+    use:
+      # - my-subscription-1
+      - my-subscription-2
+      - my-subscription-3
+      # - my-subscription-4
+      # - my-subscription-5
+      # - my-subscription-6
+
+  - name: Fallback
+    type: fallback                                  # 自动回退：当前节点不可用时，自动切换到下一个可用节点
+    url: https://www.gstatic.com/generate_204
+    interval: 600                                   # 每隔600秒测试一次
+    lazy: true                                      # 懒惰测试，只有该组被使用时才进行测试，可减少资源消耗
+    expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
+    proxies:
+    use:
+      # - my-subscription-1
+      - my-subscription-2
+      - my-subscription-3
+      # - my-subscription-4
+      # - my-subscription-5
+      # - my-subscription-6
+
+# =========================================================================================
+
+  - name: AI_non_cn                                 # 非中国 AI 服务使用的节点（ChatGPT、Gemini、Grok 等）
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+
+  - name: Apple                                     # 非中国 Apple 服务使用的节点（App Store、iCloud、Apple Music 等）
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Microsoft                                 # Microsoft 服务使用的节点（Windows Update、Office 365、Xbox Live 等）
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Google                                    # Google 服务使用的节点（Google Search、YouTube、Gmail 等）
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: GitHub                                    # GitHub 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Telegram                                  # Telegram 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: OneDrive                                  # OneDrive 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Twitter                                   # X / Twitter 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+      
+
+
+# ============================================================
+# 规则集提供者（Rule Providers）
+# 作用：
+#   用于从远程或本地加载规则集，避免在 rules 中手写大量网站规则。
+#
+# 使用方式：
+#   1. 先在 rule-providers 中定义规则集；
+#   2. 再在 rules 中用 RULE-SET 引用对应规则集。
+#
+# 2026年热门常用的 rule-providers：
+#   1. MetaCubeX / meta-rules-dat
+#   2. blackmatrix7 / ios_rule_script
+#   3. Loyalsoldier / clash-rules
+#      Loyalsoldier / v2ray-rules-dat
+#   4. ACL4SSR / ACL4SSR
+#   5. DustinWin / ruleset_geodata
+#   6. SukkaW / Surge
+#      SukkaLab / ruleset.skk.moe
+#   7. dler-io / Rules
+#   8. ClashConnectRules / Self-Configuration
+#   9. TG-Twilight / AWAvenue-Ads-Rule
+#   10. privacy-protection-tools / anti-AD
+# ============================================================
+rule-providers:
+  # ========================================
+  # 局域网 / 私有地址规则集
+  # ========================================
+  private_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/private_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/private.mrs  # 远程规则集 URL
+
+  private_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/private_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/private.mrs    # 远程规则集 URL
+
+  # ========================================
+  # 非中国 AI 服务规则集（ChatGPT、Gemini、Grok 等）
+  # ========================================
+  ai_non_cn:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/ai_services_non_cn.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-ai-!cn.mrs   # 远程规则集 URL
+
+  # ========================================
+  # Google 服务规则集
+  # ========================================
+  google_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs   # 远程规则集 URL
+
+  google_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs    # 远程规则集 URL
+
+  # ========================================
+  # Apple 服务规则集（App Store、iCloud、Apple Music 等）
+  # ========================================
+  apple_cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/apple_cn_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/apple-cn.mrs
+
+  apple_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/apple_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/apple.mrs
+
+  # ========================================
+  # Microsoft 服务规则集（Windows Update、Office 365、Xbox Live 等）
+  # ========================================
+  onedrive:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/onedrive.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/onedrive.mrs
+
+  github:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/github.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/github.mrs
+
+  microsoft:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/microsoft.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/microsoft.mrs
+
+  # ========================================
+  # Telegram 服务规则集
+  # ========================================
+  telegram_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/telegram_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/telegram.mrs
+
+  telegram_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/telegram_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/telegram.mrs
+
+  # ========================================
+  # X / Twitter 服务规则集
+  # ========================================
+  twitter_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/twitter_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/twitter.mrs
+
+  twitter_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/twitter_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/twitter.mrs
+
+  # ========================================
+  # 中国大陆服务规则集
+  # ========================================
+  cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/cn_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/cn.mrs
+
+  cn_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/cn_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo-lite/geoip/cn.mrs
+
+  geolocation_cn_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/geolocation_cn.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/geolocation-cn.mrs
+
+
+
+# ========================================
+# 规则（Rules）
+# 顺序很重要，Clash 会从上到下匹配
+# ========================================
+rules:
+  # ===============================
+  # 局域网 / 私有地址直连
+  # ===============================
+  - RULE-SET,private_domain,DIRECT
+  - RULE-SET,private_ip,DIRECT,no-resolve
+
+  # ===============================
+  # 非中国 AI 服务分流（ChatGPT、Gemini、Grok 等）
+  # ===============================
+  - RULE-SET,ai_non_cn,AI_non_cn
+
+  # ===============================
+  # Google 服务分流
+  # ===============================
+  - RULE-SET,google_domain,Google
+  - RULE-SET,google_ip,Google,no-resolve
+
+  # ===============================
+  # Apple 服务分流（App Store、iCloud、Apple Music 等）
+  # ===============================
+  - RULE-SET,apple_cn_domain,DIRECT
+  - RULE-SET,apple_domain,Apple
+
+  # ===============================
+  # Microsoft 服务分流（Windows Update、Office 365、Xbox Live
+  # ===============================
+  - RULE-SET,onedrive,OneDrive
+  - RULE-SET,github,GitHub
+  - RULE-SET,microsoft,Microsoft
+
+  # ===============================
+  # Telegram 服务分流
+  # ===============================
+  - RULE-SET,telegram_domain,Telegram
+  - RULE-SET,telegram_ip,Telegram,no-resolve
+
+  # ===============================
+  # X / Twitter 服务分流
+  # ===============================
+  - RULE-SET,twitter_domain,Twitter
+  - RULE-SET,twitter_ip,Twitter,no-resolve
+
+  # ===============================
+  # 中国大陆服务直连
+  # ===============================
+  - RULE-SET,cn_domain,DIRECT
+  - RULE-SET,cn_ip,DIRECT,no-resolve
+  - RULE-SET,geolocation_cn_domain,DIRECT
+
+  # ===============================
+  # 漏网之鱼
+  # ===============================
+  - MATCH,Manually Select Nodes                          # 默认匹配，所有未命中规则的走 Manually Select Nodes 代理组
+
+
