@@ -450,7 +450,15 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
-  - name: Google                                    # Google 服务使用的节点（Google Search、YouTube、Gmail 等）
+  - name: YouTube                                   # YouTube 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Google                                    # Google 服务使用的节点（Google Search、Gmail 等）
     type: select                                    # 手动选择节点
     proxies:
       - chain-hop2-exit
@@ -549,6 +557,14 @@ rule-providers:
   # ========================================
   # Google 服务规则集
   # ========================================
+  youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/youtube.mrs   # 远程规则集 URL
+
   google_domain:
     type: http
     behavior: domain
@@ -693,6 +709,11 @@ rules:
   # 非中国 AI 服务分流（ChatGPT、Gemini、Grok 等）
   # ===============================
   - RULE-SET,ai_non_cn,AI_non_cn
+
+  # ===============================
+  # YouTube 服务分流
+  # ===============================
+  - RULE-SET,youtube,YouTube
 
   # ===============================
   # Google 服务分流
