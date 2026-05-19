@@ -1,8 +1,8 @@
 # =================================
-# mihomo 配置文件
+# Mihomo 配置文件
 # 适用于：NAS + Docker + MetaCubeXD
-# 版本：v2.0.1
-# 更新日期：5.11.2026
+# 版本：v2.0.2
+# 更新日期：5.19.2026
 # 作者：fmSun686yu
 # =================================
 
@@ -800,15 +800,7 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
-  - name: Microsoft                                 # Microsoft 服务使用的节点（Windows Update、Office 365、Xbox Live 等）
-    type: select                                    # 手动选择节点
-    proxies:
-      - chain-hop2-exit
-      - Manually Select Nodes
-      - Auto Select Nodes
-      - Fallback
-
-  - name: Google                                    # Google 服务使用的节点（Google Search、YouTube、Gmail 等）
+  - name: OneDrive                                  # OneDrive 使用的节点
     type: select                                    # 手动选择节点
     proxies:
       - chain-hop2-exit
@@ -824,7 +816,7 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
-  - name: Telegram                                  # Telegram 使用的节点
+  - name: Microsoft                                 # Microsoft 服务使用的节点（Windows Update、Office 365、Xbox Live 等）
     type: select                                    # 手动选择节点
     proxies:
       - chain-hop2-exit
@@ -832,7 +824,23 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
-  - name: OneDrive                                  # OneDrive 使用的节点
+  - name: YouTube                                   # YouTube 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Google                                    # Google 服务使用的节点（Google Search、Gmail 等）
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: Telegram                                  # Telegram 使用的节点
     type: select                                    # 手动选择节点
     proxies:
       - chain-hop2-exit
@@ -905,25 +913,6 @@ rule-providers:
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-ai-!cn.mrs   # 远程规则集 URL
 
   # ========================================
-  # Google 服务规则集
-  # ========================================
-  google_domain:
-    type: http
-    behavior: domain
-    format: mrs
-    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_domain.mrs
-    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs   # 远程规则集 URL
-
-  google_ip:
-    type: http
-    behavior: ipcidr
-    format: mrs
-    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_ip.mrs
-    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs    # 远程规则集 URL
-
-  # ========================================
   # Apple 服务规则集（App Store、iCloud、Apple Music 等）
   # ========================================
   apple_cn_domain:
@@ -968,6 +957,33 @@ rule-providers:
     interval: 28800                                   # 每隔28800秒（8小时）更新规则集
     path: ./rule-providers/microsoft.mrs
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/microsoft.mrs
+  
+  # ========================================
+  # Google 服务规则集
+  # ========================================
+  youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/youtube.mrs   # 远程规则集 URL
+
+  google_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs   # 远程规则集 URL
+
+  google_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs    # 远程规则集 URL
 
   # ========================================
   # Telegram 服务规则集
@@ -1053,12 +1069,6 @@ rules:
   - RULE-SET,ai_non_cn,AI_non_cn
 
   # ===============================
-  # Google 服务分流
-  # ===============================
-  - RULE-SET,google_domain,Google
-  - RULE-SET,google_ip,Google,no-resolve
-
-  # ===============================
   # Apple 服务分流（App Store、iCloud、Apple Music 等）
   # ===============================
   - RULE-SET,apple_cn_domain,DIRECT
@@ -1070,6 +1080,13 @@ rules:
   - RULE-SET,onedrive,OneDrive
   - RULE-SET,github,GitHub
   - RULE-SET,microsoft,Microsoft
+
+  # ===============================
+  # Google 服务分流
+  # ===============================
+  - RULE-SET,youtube,YouTube
+  - RULE-SET,google_domain,Google
+  - RULE-SET,google_ip,Google,no-resolve
 
   # ===============================
   # Telegram 服务分流
@@ -1093,6 +1110,6 @@ rules:
   # ===============================
   # 漏网之鱼
   # ===============================
-  - MATCH,Manually Select Nodes                          # 默认匹配，所有未命中规则的走 Manually Select Nodes 代理组
+  - MATCH,Manually Select Nodes    
 
 

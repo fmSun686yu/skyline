@@ -1,12 +1,12 @@
 # ==============================================
-# Clash 配置文件
+# Mihomo 配置文件
 # 适用于:
 #   Windows 平台：Clash Party、Clash Verge、FIClash 等
 #   macOS 平台：Clash Verge 等
 #
 # 作者：fmSun686yu
-# 版本：v1.0.2
-# 日期：5.11.2026
+# 版本：v1.0.3
+# 日期：5.19.2026
 # ==============================================
 
 # 端口配置
@@ -442,6 +442,22 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
+  - name: OneDrive                                  # OneDrive 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
+  - name: GitHub                                    # GitHub 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
   - name: Microsoft                                 # Microsoft 服务使用的节点（Windows Update、Office 365、Xbox Live 等）
     type: select                                    # 手动选择节点
     proxies:
@@ -466,23 +482,7 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
-  - name: GitHub                                    # GitHub 使用的节点
-    type: select                                    # 手动选择节点
-    proxies:
-      - chain-hop2-exit
-      - Manually Select Nodes
-      - Auto Select Nodes
-      - Fallback
-
   - name: Telegram                                  # Telegram 使用的节点
-    type: select                                    # 手动选择节点
-    proxies:
-      - chain-hop2-exit
-      - Manually Select Nodes
-      - Auto Select Nodes
-      - Fallback
-
-  - name: OneDrive                                  # OneDrive 使用的节点
     type: select                                    # 手动选择节点
     proxies:
       - chain-hop2-exit
@@ -555,33 +555,6 @@ rule-providers:
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/category-ai-!cn.mrs   # 远程规则集 URL
 
   # ========================================
-  # Google 服务规则集
-  # ========================================
-  youtube:
-    type: http
-    behavior: domain
-    format: mrs
-    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_domain.mrs
-    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/youtube.mrs   # 远程规则集 URL
-
-  google_domain:
-    type: http
-    behavior: domain
-    format: mrs
-    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_domain.mrs
-    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs   # 远程规则集 URL
-
-  google_ip:
-    type: http
-    behavior: ipcidr
-    format: mrs
-    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_ip.mrs
-    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs    # 远程规则集 URL
-
-  # ========================================
   # Apple 服务规则集（App Store、iCloud、Apple Music 等）
   # ========================================
   apple_cn_domain:
@@ -626,6 +599,33 @@ rule-providers:
     interval: 28800                                   # 每隔28800秒（8小时）更新规则集
     path: ./rule-providers/microsoft.mrs
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/microsoft.mrs
+  
+  # ========================================
+  # Google 服务规则集
+  # ========================================
+  youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/youtube.mrs   # 远程规则集 URL
+
+  google_domain:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_domain.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs   # 远程规则集 URL
+
+  google_ip:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/google_ip.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs    # 远程规则集 URL
 
   # ========================================
   # Telegram 服务规则集
@@ -711,17 +711,6 @@ rules:
   - RULE-SET,ai_non_cn,AI_non_cn
 
   # ===============================
-  # YouTube 服务分流
-  # ===============================
-  - RULE-SET,youtube,YouTube
-
-  # ===============================
-  # Google 服务分流
-  # ===============================
-  - RULE-SET,google_domain,Google
-  - RULE-SET,google_ip,Google,no-resolve
-
-  # ===============================
   # Apple 服务分流（App Store、iCloud、Apple Music 等）
   # ===============================
   - RULE-SET,apple_cn_domain,DIRECT
@@ -733,6 +722,13 @@ rules:
   - RULE-SET,onedrive,OneDrive
   - RULE-SET,github,GitHub
   - RULE-SET,microsoft,Microsoft
+
+  # ===============================
+  # Google 服务分流
+  # ===============================
+  - RULE-SET,youtube,YouTube
+  - RULE-SET,google_domain,Google
+  - RULE-SET,google_ip,Google,no-resolve
 
   # ===============================
   # Telegram 服务分流
