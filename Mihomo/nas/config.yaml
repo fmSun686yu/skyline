@@ -1,7 +1,7 @@
 # =================================
 # Mihomo 配置文件
 # 适用于：NAS + Docker + MetaCubeXD
-# 版本：v2.1.0
+# 版本：v2.1.1
 # 更新日期：5.19.2026
 # 作者：fmSun686yu
 # =================================
@@ -587,6 +587,147 @@ proxies:
 # - 这里建议用 proxy-providers 管理你的机场/节点订阅，你的代理节点通过订阅链接添加
 # - 你必须把 url 改成你自己的订阅地址
 # -------------------------
+proxy-providers:
+  my-subscription-1:
+    type: http                                                          # 表示通过 HTTP 方式下载订阅内容
+    url: https://example.com/proxyproviders/subscription1               # 这里改成你的订阅链接
+    path: ./proxy-providers/my-subscription-1.yaml                      # 订阅内容缓存到本地文件
+    interval: 43200                                                     # 更新间隔（秒）,43200s = 12h
+    proxy: DIRECT                                                       # 拉取订阅时使用该节点
+    size-limit: 0                                                       # 下载大小限制，0 表示不限制
+    health-check:                                                       # 订阅中的节点自动做延迟检测
+      enable: true                                                      # 是否对订阅中的节点进行健康检查/延迟测试
+      url: https://www.gstatic.com/generate_204                         # 用于测试连通性的目标 URL
+      interval: 300                                                     # 健康检查周期，单位秒
+      timeout: 10000                                                    # 单次健康检查超时时间，单位毫秒
+      lazy: true                                                        # 懒检测模式，减少不必要的频繁探测
+      expected-status: 204
+    override:
+      additional-prefix: "[SUB-1]"                                      # 给订阅中的所有节点统一添加前缀 "[SUB-1]"
+      udp: true                                                         # 是否启用节点的 UDP 转发能力
+      tfo: false                                                        # 是否启用 TCP Fast Open（TCP 快速打开）
+      mptcp: false                                                      # 是否启用 MPTCP（Multipath TCP，多路径 TCP）
+      up: "100000Mbps"                                                  # 上行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+      down: "100000Mbps"                                                # 下行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+
+  my-subscription-2:
+    type: http                                                          # 表示通过 HTTP 方式下载订阅内容
+    url: https://example.com/proxyproviders/subscription2               # 这里改成你的订阅链接
+    path: ./proxy-providers/my-subscription-2.yaml                      # 订阅内容缓存到本地文件
+    interval: 43200                                                     # 更新间隔（秒）,43200s = 12h
+    proxy: DIRECT                                                       # 拉取订阅时使用该节点
+    size-limit: 0                                                       # 下载大小限制，0 表示不限制
+    health-check:                                                       # 订阅中的节点自动做延迟检测
+      enable: true                                                      # 是否对订阅中的节点进行健康检查/延迟测试
+      url: https://www.gstatic.com/generate_204                         # 用于测试连通性的目标 URL
+      interval: 300                                                     # 健康检查周期，单位秒
+      timeout: 10000                                                    # 单次健康检查超时时间，单位毫秒
+      lazy: true                                                        # 懒检测模式，减少不必要的频繁探测
+      expected-status: 204
+    override:
+      additional-prefix: "[SUB-2]"                                      # 给订阅中的所有节点统一添加前缀 "[SUB-2]"
+      udp: true                                                         # 是否启用节点的 UDP 转发能力
+      tfo: false                                                        # 是否启用 TCP Fast Open（TCP 快速打开）
+      mptcp: false                                                      # 是否启用 MPTCP（Multipath TCP，多路径 TCP）
+      up: "100000Mbps"                                                  # 上行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+      down: "100000Mbps"                                                # 下行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+
+  my-subscription-3:
+    type: http                                                          # 表示通过 HTTP 方式下载订阅内容
+    url: https://example.com/proxyproviders/subscription3               # 这里改成你的订阅链接
+    path: ./proxy-providers/my-subscription-3.yaml                      # 订阅内容缓存到本地文件
+    interval: 43200                                                     # 更新间隔（秒）,43200s = 12h
+    proxy: DIRECT                                                       # 拉取订阅时使用该节点
+    size-limit: 0                                                       # 下载大小限制，0 表示不限制
+    health-check:                                                       # 订阅中的节点自动做延迟检测
+      enable: true                                                      # 是否对订阅中的节点进行健康检查/延迟测试
+      url: https://www.gstatic.com/generate_204                         # 用于测试连通性的目标 URL
+      interval: 300                                                     # 健康检查周期，单位秒
+      timeout: 10000                                                    # 单次健康检查超时时间，单位毫秒
+      lazy: true                                                        # 懒检测模式，减少不必要的频繁探测
+      expected-status: 204
+    override:
+      additional-prefix: "[SUB-3]"                                      # 给订阅中的所有节点统一添加前缀 "[SUB-3]"
+      udp: true                                                         # 是否启用节点的 UDP 转发能力
+      tfo: false                                                        # 是否启用 TCP Fast Open（TCP 快速打开）
+      mptcp: false                                                      # 是否启用 MPTCP（Multipath TCP，多路径 TCP）
+      up: "100000Mbps"                                                  # 上行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+      down: "100000Mbps"                                                # 下行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+
+  my-subscription-4:
+    type: http                                                          # 表示通过 HTTP 方式下载订阅内容
+    url: https://example.com/proxyproviders/subscription4               # 这里改成你的订阅链接
+    path: ./proxy-providers/my-subscription-4.yaml                      # 订阅内容缓存到本地文件
+    interval: 43200                                                     # 更新间隔（秒）,43200s = 12h
+    proxy: DIRECT                                                       # 拉取订阅时使用该节点
+    size-limit: 0                                                       # 下载大小限制，0 表示不限制
+    health-check:                                                       # 订阅中的节点自动做延迟检测
+      enable: true                                                      # 是否对订阅中的节点进行健康检查/延迟测试
+      url: https://www.gstatic.com/generate_204                         # 用于测试连通性的目标 URL
+      interval: 300                                                     # 健康检查周期，单位秒
+      timeout: 10000                                                    # 单次健康检查超时时间，单位毫秒
+      lazy: true                                                        # 懒检测模式，减少不必要的频繁探测
+      expected-status: 204
+    override:
+      additional-prefix: "[SUB-4]"                                      # 给订阅中的所有节点统一添加前缀 "[SUB-4]"
+      udp: true                                                         # 是否启用节点的 UDP 转发能力
+      tfo: false                                                        # 是否启用 TCP Fast Open（TCP 快速打开）
+      mptcp: false                                                      # 是否启用 MPTCP（Multipath TCP，多路径 TCP）
+      up: "100000Mbps"                                                  # 上行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+      down: "100000Mbps"                                                # 下行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+
+  my-subscription-5:
+    type: http                                                          # 表示通过 HTTP 方式下载订阅内容
+    url: https://example.com/proxyproviders/subscription5               # 这里改成你的订阅链接
+    path: ./proxy-providers/my-subscription-5.yaml                      # 订阅内容缓存到本地文件
+    interval: 43200                                                     # 更新间隔（秒）,43200s = 12h
+    proxy: DIRECT                                                       # 拉取订阅时使用该节点
+    size-limit: 0                                                       # 下载大小限制，0 表示不限制
+    health-check:                                                       # 订阅中的节点自动做延迟检测
+      enable: true                                                      # 是否对订阅中的节点进行健康检查/延迟测试
+      url: https://www.gstatic.com/generate_204                         # 用于测试连通性的目标 URL
+      interval: 300                                                     # 健康检查周期，单位秒
+      timeout: 10000                                                    # 单次健康检查超时时间，单位毫秒
+      lazy: true                                                        # 懒检测模式，减少不必要的频繁探测
+      expected-status: 204
+    override:
+      additional-prefix: "[SUB-5]"                                      # 给订阅中的所有节点统一添加前缀 "[SUB-5]"
+      udp: true                                                         # 是否启用节点的 UDP 转发能力
+      tfo: false                                                        # 是否启用 TCP Fast Open（TCP 快速打开）
+      mptcp: false                                                      # 是否启用 MPTCP（Multipath TCP，多路径 TCP）
+      up: "100000Mbps"                                                  # 上行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+      down: "100000Mbps"                                                # 下行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+
+  my-subscription-6:
+    type: http                                                          # 表示通过 HTTP 方式下载订阅内容
+    url: https://example.com/proxyproviders/subscription6               # 这里改成你的订阅链接
+    path: ./proxy-providers/my-subscription-6.yaml                      # 订阅内容缓存到本地文件
+    interval: 43200                                                     # 更新间隔（秒）,43200s = 12h
+    proxy: DIRECT                                                       # 拉取订阅时使用该节点
+    size-limit: 0                                                       # 下载大小限制，0 表示不限制
+    health-check:                                                       # 订阅中的节点自动做延迟检测
+      enable: true                                                      # 是否对订阅中的节点进行健康检查/延迟测试
+      url: https://www.gstatic.com/generate_204                         # 用于测试连通性的目标 URL
+      interval: 300                                                     # 健康检查周期，单位秒
+      timeout: 10000                                                    # 单次健康检查超时时间，单位毫秒
+      lazy: true                                                        # 懒检测模式，减少不必要的频繁探测
+      expected-status: 204
+    override:
+      additional-prefix: "[SUB-6]"                                      # 给订阅中的所有节点统一添加前缀 "[SUB-6]"
+      udp: true                                                         # 是否启用节点的 UDP 转发能力
+      tfo: false                                                        # 是否启用 TCP Fast Open（TCP 快速打开）
+      mptcp: false                                                      # 是否启用 MPTCP（Multipath TCP，多路径 TCP）
+      up: "100000Mbps"                                                  # 上行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+      down: "100000Mbps"                                                # 下行带宽，单位可以是 bps, Kbps, Mbps, Gbps
+
+
+
+# -------------------------------------------------
+# 代理组
+# select: 手动选
+# url-test: 自动选延迟最低
+# fallback: 当前节点不可用时按顺序切换
+# -------------------------------------------------
 proxy-groups:
   - name: chain-hop2-exit                           # 链式代理第2跳节点，出口节点
     type: select                                    # 手动选择节点
