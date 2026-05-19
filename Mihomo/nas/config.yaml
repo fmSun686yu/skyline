@@ -1,7 +1,7 @@
 # =================================
 # Mihomo 配置文件
 # 适用于：NAS + Docker + MetaCubeXD
-# 版本：v2.0.2
+# 版本：v2.0.3
 # 更新日期：5.19.2026
 # 作者：fmSun686yu
 # =================================
@@ -556,7 +556,7 @@ dns:
     - https://cloudflare-dns.com/dns-query      # Cloudflare DoH
 
   # 配置 fallback 使用条件
-  fallback-filter: []
+  fallback-filter:
 
 # -------------------------------------------------
 # 手动添加单个代理节点
@@ -747,12 +747,12 @@ proxy-groups:
     type: select                                    # 手动选择节点
     proxies:
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
   - name: Auto Select Nodes
     type: url-test                                  # 自动选择延迟最低的节点
@@ -763,12 +763,12 @@ proxy-groups:
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     proxies:
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
   - name: Fallback
     type: fallback                                  # 自动回退：当前节点不可用时，自动切换到下一个可用节点
@@ -778,12 +778,12 @@ proxy-groups:
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     proxies:
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
 # =========================================================================================
 
