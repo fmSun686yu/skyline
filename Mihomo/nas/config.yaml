@@ -872,6 +872,14 @@ proxy-groups:
       - Auto Select Nodes
       - Fallback
 
+  - name: Twitch                                    # Twitch 使用的节点
+    type: select                                    # 手动选择节点
+    proxies:
+      - chain-hop2-exit
+      - Manually Select Nodes
+      - Auto Select Nodes
+      - Fallback
+
   - name: Other                                     # 其他未被匹配的流量使用的节点
     type: select                                    # 手动选择节点
     proxies:
@@ -1078,6 +1086,17 @@ rule-providers:
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/facebook.mrs
 
   # ========================================
+  # Twitch 服务规则集
+  # ========================================
+  twitch:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 28800                                   # 每隔28800秒（8小时）更新规则集
+    path: ./rule-providers/twitch.mrs
+    url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/twitch.mrs
+
+  # ========================================
   # 中国大陆服务规则集
   # ========================================
   cn_domain:
@@ -1164,6 +1183,11 @@ rules:
   # ===============================
   - RULE-SET,facebook_domain,Facebook
   - RULE-SET,facebook_ip,Facebook,no-resolve
+
+  # ===============================
+  # Twitch 服务分流
+  # ===============================
+  - RULE-SET,twitch,Twitch
 
   # ===============================
   # 中国大陆服务直连
