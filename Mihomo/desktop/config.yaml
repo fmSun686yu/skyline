@@ -5,7 +5,7 @@
 #   macOS 平台：Clash Verge 等
 #
 # 作者：fmSun686yu
-# 版本：v1.1.0
+# 版本：v1.2.0
 # 日期：5.19.2026
 # ==============================================
 
@@ -235,7 +235,7 @@ dns:
 # 代理节点配置（Proxies）
 # ========================================
 proxies:
-  - name: USA-San Francisco	- Static Native ISP     # 节点名称（可自定义）
+  - name: USA_Static_Native_ISP                     # 节点名称（可自定义）
     type: socks5                                    # 节点类型，SOCKS5 代理
     dialer-proxy: chain-hop1-entry                  # 拨号代理（可选），如果这个节点需要通过另一个代理连接。
 
@@ -374,7 +374,7 @@ proxy-groups:
   - name: chain-hop2-exit                           # 链式代理第2跳节点，出口节点
     type: select                                    # 手动选择节点
     proxies:
-      - USA-San Francisco	- Static Native ISP
+      - USA_Static_Native_ISP
 
   - name: chain-hop1-entry                          # 链式代理第1跳节点，入口节点
     type: select                                    # 手动选择节点
