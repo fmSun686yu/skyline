@@ -1,12 +1,12 @@
 # ==============================================
-# Mihomo 配置文件
+# Mihomo 配置文件模版
 # 适用于:
 #   Windows 平台：Clash Party、Clash Verge、FIClash 等
 #   macOS 平台：Clash Verge 等
 #
 # 作者：fmSun686yu
-# 版本：v1.2.0
-# 日期：5.19.2026
+# 版本：v1.2.2
+# 日期：9.10.2026
 # ==============================================
 
 # 端口配置
@@ -22,9 +22,11 @@ bind-address: 127.0.0.1         # 绑定的网络接口，默认所有接口，�
 # 运行模式，可选：global、rule、direct
 mode: rule                      # 默认规则模式，按规则分流
 
-ipv6: true                      # 是否启用 IPv6
+ipv6: false                      # 是否启用 IPv6
 
 unified-delay: true             # 是否开启全局统一延迟处理（开启可提高测速稳定性）
+
+find-process-mode: always       # Windows 上启用进程识别，供后面的 Edge 专用规则使用
 
 # GUI 缓存功能
 profile:
@@ -41,8 +43,22 @@ log-level: info     # 可选：trace / debug / info / warning / error
 # TUN 配置（全局透明代理）
 tun:
   enable: true                          # 是否开启 TUN 模式（虚拟网卡透明代理）
-  stack: system                         # 使用的 TUN 栈类型：system（系统默认），macOS/Windows 一般用 system
-  mtu: 3000                             # TUN 网卡 MTU（最大传输单元），可提高大流量传输性能
+  # 使用的 TUN 栈类型：system（系统默认），macOS/Windows 一般用 system
+  # TCP 使用系统栈、UDP 使用 gVisor，适合捕获 WebRTC UDP
+  stack: mixed
+  # mtu: 3000                             # TUN 网卡 MTU（最大传输单元），可提高大流量传输性能
+  auto-route: true                      # 自动把系统 IPv4 流量路由到 TUN
+  auto-detect-interface: true           # 自动识别 Wi-Fi/以太网等真实出口
+  strict-route: true                    # Windows 下阻止多网卡 DNS 查询旁路
+
+  # 劫持普通 UDP/TCP DNS 查询
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+
+  udp-timeout: 3000                     # WebRTC/UDP NAT 会话超时
+
+  endpoint-independent-nat: false       # 不开启 Endpoint-Independent NAT
 
 # ========================================
 # DNS 配置
@@ -53,15 +69,16 @@ dns:
   use-hosts: true                       # 是否启用 hosts 文件中自定义域名
   use-system-hosts: false               # 是否使用系统 hosts 文件（Windows/macOS/Linux）
   respect-rules: true                   # 是否让 DNS 解析遵循 Clash 规则（true: 按规则分流解析）
+  prefer-h3: false
   listen: 0.0.0.0:1053                  # DNS 监听端口，0.0.0.0 表示所有网络接口
-  ipv6: true                            # 是否解析 IPv6 地址
+  ipv6: false                           # 是否解析 IPv6 地址
   
   # 高级模式，可选 fake-ip / redir-host
   # fake-ip: 给域名分配虚拟 IP，配合 TUN 或规则分流使用
   # redir-host: 按域名代理流量，不使用虚拟 IP
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16          # fake-ip 虚拟 IP 段，用于映射域名
-  fake-ip-range6: fdfe:dcba:9876::1/64  # IPv6 fake-ip 段（可选）
+  # fake-ip-range6: fdfe:dcba:9876::1/64  # IPv6 fake-ip 段（可选）
   fake-ip-filter-mode: blacklist        # fake-ip 过滤模式：blacklist 或 whitelist
   fake-ip-filter:                       # fake-ip 过滤列表
     - '*.lan'                           # 匹配 *.lan 域名，不使用 fake-ip
@@ -69,8 +86,8 @@ dns:
     - 'time.apple.com'
     - 'time.asia.apple.com'
     - 'time.nist.gov'
-    - 'stun.*.*.*'                      # STUN 服务，不使用 fake-ip
-    - 'stun.*.*'                        # STUN 服务，不使用 fake-ip
+    # - 'stun.*.*.*'                      # STUN 服务，不使用 fake-ip
+    # - 'stun.*.*'                        # STUN 服务，不使用 fake-ip
     - '*.ntp.org.cn'                    # 中国 NTP 时间同步服务，不使用 fake-ip
     - '*.openwrt.pool.ntp.org'          # OpenWrt NTP 时间同步，不使用 fake-ip
     - 'time1.cloud.tencent.com'         # 腾讯云 NTP，不使用 fake-ip
@@ -169,7 +186,7 @@ dns:
   nameserver-policy:
     # 私有域名 / 内网域名交给路由器或本地 DNS
     "geosite:private":
-      - 192.168.2.1                     # 此处填写主路由器 IP
+      - 192.168.50.1                      # 此处填写主路由器 IP
 
     # 中国大陆公网域名使用国内 DNS
     # DoH + 普通 DNS 组合，提高稳定性
@@ -239,41 +256,25 @@ proxies:
     type: socks5                                    # 节点类型，SOCKS5 代理
     dialer-proxy: chain-hop1-entry                  # 拨号代理（可选），如果这个节点需要通过另一个代理连接。
 
-    server: server                                  # 节点服务器地址（域名或 IP）
-    port: port                                      # 节点服务器端口
+    server: socks5.example.com                        # 示例 SOCKS5 服务器；请替换为实际域名或 IP
+    port: 1080                                        # 示例 SOCKS5 端口；请替换为实际端口
 
-    username: username                              # SOCKS5 验证用户名（如果需要）
-    password: password                              # SOCKS5 验证密码（如果需要）
+    username: "YOUR_SOCKS5_USERNAME"                 # 示例用户名；无需认证时请删除 username 和 password
+    password: "YOUR_SOCKS5_PASSWORD"                 # 示例密码；公开仓库中请勿提交真实凭据
 
-    ip-version: auto                                # IP 协议版本，ipv4 / ipv6 / auto
+    ip-version: ipv4-prefer                         # IP 协议版本，ipv4 / ipv6 / auto
     udp: true                                       # 是否支持 UDP 转发（重要，视频/游戏需要开启）
-    interface-name: eth0                            # 本地网卡绑定（可选，用于多网卡场景）
+    # interface-name: eth0                            # 本地网卡绑定（可选，用于多网卡场景）
     tfo: false                                      # TCP Fast Open 开关（提高连接速度，可选）
     mptcp: false                                    # 是否启用多路径 TCP（Multipath TCP，可提升吞吐量）
-
-  # 快速注释：选中多行 → Cmd + /
-  # 再次按下 Cmd + / 取消注释
-
-  # - name: "ss"                    # 节点名称，可自定义
-  #   type: ss                      # 节点类型，Shadowsocks
-  #   server: server                # 节点服务器地址（域名或 IP）
-  #   port: 443                     # 节点服务器端口
-  #   ip-version: ipv4              # IP 协议版本，ipv4 / ipv6 / auto
-  #   udp: true                     # 是否支持 UDP 转发（重要，视频/游戏需要开启）
-  #   interface-name: eth0          # 本地网卡绑定（可选，用于多网卡场景）
-  #   routing-mark: 1234            # Linux 下用于策略路由的标记（iptables MARK）
-  #   tfo: false                    # TCP Fast Open 开关（提高连接速度，可选）
-  #   mptcp: false                  # 是否启用多路径 TCP（Multipath TCP，可提升吞吐量）
-
-  #   dialer-proxy: ss1             # 拨号代理（可选），如果这个节点需要通过另一个代理连接。例如 ss 节点通过 ss1 代理访问服务器
 
 # ============================================================
 # 节点订阅提供者（Proxy Providers）
 # ============================================================
 proxy-providers:
-  my-subscription-1:                                          # 订阅提供者1
+  my-subscription-1:
     type: http
-    url: https://example.com/proxyproviders/subscription1     # 订阅链接地址
+    url: "https://provider-1.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_1"  # 示例订阅地址 1；请替换完整 URL，公开仓库中请勿提交真实凭据
     path: ./proxy_providers/my-subscription-1.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
     interval: 10800                                           # 每隔10800秒（3小时）更新订阅
     proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
@@ -286,10 +287,12 @@ proxy-providers:
       expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     override:
       additional-prefix: "[SUB-1]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-1]"
+      udp: true
+      ip-version: ipv4-prefer
 
   my-subscription-2:                                          # 订阅提供者2
     type: http
-    url: https://example.com/proxyproviders/subscription2     # 订阅链接地址
+    url: "https://provider-2.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_2"  # 示例订阅地址 2；请替换完整 URL，公开仓库中请勿提交真实凭据
     path: ./proxy_providers/my-subscription-2.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
     interval: 10800                                           # 每隔10800秒（3小时）更新订阅
     proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
@@ -302,10 +305,12 @@ proxy-providers:
       expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     override:
       additional-prefix: "[SUB-2]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-2]"
+      udp: true
+      ip-version: ipv4-prefer
 
-  my-subscription-3:                                          # 订阅提供者3
+  my-subscription-3:
     type: http
-    url: https://example.com/proxyproviders/subscription3     # 订阅链接地址
+    url: "https://provider-3.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_3"  # 示例订阅地址 3；请替换完整 URL，公开仓库中请勿提交真实凭据
     path: ./proxy_providers/my-subscription-3.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
     interval: 10800                                           # 每隔10800秒（3小时）更新订阅
     proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
@@ -318,10 +323,12 @@ proxy-providers:
       expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     override:
       additional-prefix: "[SUB-3]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-3]"
+      udp: true
+      ip-version: ipv4-prefer
 
-  my-subscription-4:                                          # 订阅提供者4
+  my-subscription-4:
     type: http
-    url: https://example.com/proxyproviders/subscription4     # 订阅链接地址
+    url: "https://provider-4.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_4"  # 示例订阅地址 4；请替换完整 URL，公开仓库中请勿提交真实凭据
     path: ./proxy_providers/my-subscription-4.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
     interval: 10800                                           # 每隔10800秒（3小时）更新订阅
     proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
@@ -334,10 +341,12 @@ proxy-providers:
       expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     override:
       additional-prefix: "[SUB-4]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-4]"
+      udp: true
+      ip-version: ipv4-prefer
 
-  my-subscription-5:                                          # 订阅提供者5
+  my-subscription-5:
     type: http
-    url: https://example.com/proxyproviders/subscription5     # 订阅链接地址
+    url: "https://provider-5.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_5"  # 示例订阅地址 5；请替换完整 URL，公开仓库中请勿提交真实凭据
     path: ./proxy_providers/my-subscription-5.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
     interval: 10800                                           # 每隔10800秒（3小时）更新订阅
     proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
@@ -350,10 +359,12 @@ proxy-providers:
       expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     override:
       additional-prefix: "[SUB-5]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-5]"
+      udp: true
+      ip-version: ipv4-prefer
 
-  my-subscription-6:                                          # 订阅提供者6
+  my-subscription-6:
     type: http
-    url: https://example.com/proxyproviders/subscription6     # 订阅链接地址
+    url: "https://provider-6.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_6"  # 示例订阅地址 6；请替换完整 URL，公开仓库中请勿提交真实凭据
     path: ./proxy_providers/my-subscription-6.yaml            # 本地存储订阅内容的路径，Clash 会自动下载并更新这个文件
     interval: 10800                                           # 每隔10800秒（3小时）更新订阅
     proxy: DIRECT                                             # 更新订阅时使用的代理，DIRECT 表示直连
@@ -366,6 +377,8 @@ proxy-providers:
       expected-status: 204                                    # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     override:
       additional-prefix: "[SUB-6]"                            # 给订阅中的所有节点统一添加前缀 "[SUB-6]"
+      udp: true
+      ip-version: ipv4-prefer
 
 # ========================================
 # 策略组（Proxy Groups）
@@ -389,12 +402,12 @@ proxy-groups:
     type: select                                    # 手动选择节点
     proxies:
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
   - name: Auto Select Nodes
     type: url-test                                  # 自动选择延迟最低的节点
@@ -405,12 +418,12 @@ proxy-groups:
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     proxies:
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
   - name: Fallback
     type: fallback                                  # 自动回退：当前节点不可用时，自动切换到下一个可用节点
@@ -420,12 +433,12 @@ proxy-groups:
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
     proxies:
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
 # =========================================================================================
 
@@ -842,5 +855,3 @@ rules:
   # 漏网之鱼
   # ===============================
   - MATCH,Other                          # 默认匹配，所有未命中规则的走 Other 代理组
-
-

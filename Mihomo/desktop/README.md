@@ -1,6 +1,6 @@
 # Mihomo Desktop Configuration
 
-This directory contains a Mihomo configuration template for desktop clients on **Windows** and **macOS**.
+This directory contains the Mihomo desktop configuration template **v1.2.2** for clients on **Windows** and **macOS**.
 
 It is designed for Mihomo-compatible desktop clients such as:
 
@@ -9,7 +9,9 @@ It is designed for Mihomo-compatible desktop clients such as:
 * FlClash
 * Other Mihomo-based desktop clients
 
-This template does **not** include real proxy nodes or subscription URLs. You need to replace the proxy-related sections before importing it into your client.
+This template does **not** include real proxy nodes, credentials, or subscription URLs. The SOCKS5 node and six HTTP subscription providers are placeholders; replace or remove them before importing the configuration into your client.
+
+The current defaults use rule mode, prefer IPv4, enable Windows process detection, and enable TUN with a mixed stack, automatic routing, interface detection, strict routing, and DNS hijacking.
 
 ## File Structure
 
@@ -47,14 +49,34 @@ Open `config.yaml` with a text editor, such as:
 * Notepad++
 * Any plain text editor
 
-Then replace the following sections with your own proxy nodes or subscription providers:
+Then replace or remove the example entries in the following sections:
 
 ```yaml
 proxies:
-  # Replace this section with your own proxy nodes
+  # Replace or remove the example SOCKS5 node
 proxy-providers:
-  # Replace this section with your own subscription providers
+  # Replace or remove my-subscription-1 through my-subscription-6
 ```
+
+The included SOCKS5 node is used as the second-hop exit in the example chain. Replace its server, port, and credentials before use:
+
+```yaml
+proxies:
+  - name: USA_Static_Native_ISP
+    type: socks5
+    dialer-proxy: chain-hop1-entry
+    server: socks5.example.com
+    port: 1080
+    username: "YOUR_SOCKS5_USERNAME"
+    password: "YOUR_SOCKS5_PASSWORD"
+    ip-version: ipv4-prefer
+    udp: true
+    # interface-name: eth0
+    tfo: false
+    mptcp: false
+```
+
+Delete `username` and `password` if the server does not require authentication. Keep `dialer-proxy` only when you want this node to connect through `chain-hop1-entry`; otherwise remove it and adjust the related proxy groups for your own topology. `interface-name` remains optional and is commented out by default.
 
 Mihomo supports `proxy-providers` with different provider types such as `http`, `file`, and `inline`. For an HTTP subscription provider, the `url` field is required, and `interval` controls the update interval in seconds. See the official Mihomo proxy provider documentation for details.
 
@@ -64,7 +86,7 @@ Example:
 proxy-providers:
   my-subscription-1:
     type: http
-    url: "https://example.com/your-subscription-url"
+    url: "https://provider-1.example.com/api/v1/client/subscribe?token=YOUR_SUBSCRIPTION_TOKEN_1"
     path: ./proxy_providers/my-subscription-1.yaml
     interval: 10800
     proxy: DIRECT
@@ -77,9 +99,11 @@ proxy-providers:
       expected-status: 204
     override:
       additional-prefix: "[SUB-1]"
+      udp: true
+      ip-version: ipv4-prefer
 ```
 
-Do not commit your real subscription URL to a public repository.
+The `override` block enables UDP for imported nodes and makes them prefer IPv4, matching the template's IPv4-oriented defaults. Do not commit real subscription URLs, tokens, proxy server addresses, usernames, or passwords to a public repository.
 
 ### 3. Check Proxy Groups
 
@@ -92,8 +116,12 @@ proxy-groups:
   - name: Manually Select Nodes
     type: select
     use:
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 ```
 
 If your provider is named `my-subscription-1`, then the proxy group should also use:
@@ -105,7 +133,7 @@ use:
 
 If the names do not match, the client may fail to load the configuration correctly.
 
-The current template defines subscription providers from `my-subscription-1` to `my-subscription-6`. The default proxy groups actively use `my-subscription-2` and `my-subscription-3`, while the other providers are available as placeholders that you can enable by uncommenting them in the relevant `use` lists.
+The template defines `my-subscription-1` through `my-subscription-6`. All six are enabled by default in `Manually Select Nodes`, `Auto Select Nodes`, and `Fallback`. Configure all six providers, or remove each unused provider from `proxy-providers` and from all three `use` lists.
 
 ### 4. Import into Desktop Client
 
@@ -165,6 +193,8 @@ socks-port:
 mixed-port:
 allow-lan:
 bind-address:
+ipv6:
+find-process-mode:
 external-controller:
 secret:
 tun:
@@ -215,14 +245,18 @@ Recommended practice:
 
 ## DNS Notes
 
-This template may include a DNS section such as:
+The template uses these IPv4-oriented DNS defaults:
 
 ```yaml
+ipv6: false
+
 dns:
   enable: true
+  prefer-h3: false
+  ipv6: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  fake-ip-range6: fdfe:dcba:9876::1/64
+  # fake-ip-range6: fdfe:dcba:9876::1/64
 ```
 
 Mihomo DNS supports options such as `enable`, `listen`, `enhanced-mode`, `fake-ip-range`, `fake-ip-filter`, `nameserver`, `fallback`, and `nameserver-policy`. The official documentation notes that `enhanced-mode` supports `fake-ip` and `redir-host`, with `redir-host` as the default.
@@ -230,8 +264,11 @@ Mihomo DNS supports options such as `enable`, `listen`, `enhanced-mode`, `fake-i
 For desktop clients, the recommended approach is:
 
 * Keep the default DNS settings if you are not sure.
+* IPv6 resolution and the IPv6 fake-IP range are disabled by default. If you enable IPv6, review both the top-level `ipv6` setting and the settings under `dns` together.
 * Use `fake-ip` only when the client and your system environment support it properly.
 * Add domains to `fake-ip-filter` if some local services, LAN devices, or special applications do not work correctly.
+* The sample private-domain DNS address under `nameserver-policy` is `192.168.50.1`; replace it with your router or local DNS address.
+* The two generic STUN entries in `fake-ip-filter` are commented out by default. Uncomment them only if your environment needs STUN domains to bypass fake-IP.
 * Check `proxy-server-nameserver` if proxy provider updates fail because provider domain names cannot be resolved.
 
 ## TUN Mode Notes
@@ -241,18 +278,35 @@ This desktop template enables TUN mode by default:
 ```yaml
 tun:
   enable: true
-  stack: system
-  mtu: 3000
+  stack: mixed
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  udp-timeout: 3000
+  endpoint-independent-nat: false
 ```
 
-TUN mode can route more application traffic through Mihomo, but it may require additional system permissions.
+The mixed stack uses the system stack for TCP and gVisor for UDP. Automatic routing and interface detection are enabled, and ordinary UDP/TCP DNS traffic on port 53 is sent to Mihomo. On Windows, `strict-route: true` is intended to reduce DNS bypass on systems with multiple network adapters.
 
 Recommended practice:
 
-* Start with normal system proxy mode first.
-* Enable TUN mode only after the basic proxy configuration works.
+* TUN mode is enabled by default and may require additional system permissions.
+* If this is your first setup, you can temporarily disable TUN and test normal system proxy mode first.
 * On Windows and macOS, make sure the client has the required network permissions.
-* If TUN mode causes network issues, disable it and check the client logs.
+* If TUN mode causes network issues, disable it and check the client logs. You can also test whether `strict-route` or DNS hijacking conflicts with other VPN, DNS, or security software.
+
+## Process Detection Notes
+
+The template enables process detection by default:
+
+```yaml
+find-process-mode: always
+```
+
+This setting is intended for process-based routing on Windows. It may add lookup overhead or behave differently across clients and platforms, so set it to a mode supported by your client if you do not need process matching.
 
 ## Rule Provider Notes
 
@@ -267,6 +321,9 @@ The rule sets cover:
 * Microsoft, OneDrive, and GitHub
 * Telegram
 * X / Twitter
+* Instagram
+* Facebook
+* Twitch
 * China mainland domains and IP ranges
 
 If routing does not behave as expected, update rule providers in the client first, then check whether each `RULE-SET` name in `rules` matches a provider under `rule-providers`.
