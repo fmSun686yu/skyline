@@ -1,10 +1,14 @@
 # =================================
 # Mihomo 配置文件
 # 适用于：NAS + Docker + MetaCubeXD
-# 版本：v2.1.1
-# 更新日期：5.19.2026
+# 版本：v2.1.2
+# 更新日期：9.13.2026
 # 作者：fmSun686yu
 # =================================
+
+# 部署前检查：替换住宅节点凭据和全部已启用的六个订阅链接。
+# 停用订阅时，同时停用 provider 和 Manually Select Nodes / Auto Select Nodes / Fallback 的 use 引用。
+# dns.nameserver-policy 中 192.168.50.1 仅为示例，请填写目标部署网络的本地 DNS；勿回指 Mihomo 形成循环。
 
 # -------------------------
 # 基础代理端口
@@ -29,13 +33,9 @@ lan-disallowed-ips: []      # 禁止连接的 IP 地址段，黑名单优先级�
 # 用于给代理端口加用户名密码认证，可选
 # 客户端连接 mixed-port / socks-port / http 代理时，需要输入这里定义的账号密码
 # 注意：authentication 是给 HTTP/SOCKS/mixed 代理端口 用的，不是给 external-controller: 9090 管理接口用的。
+# 部署前替换示例账号；与住宅代理账号和控制接口 secret 相互独立，多用户可追加。
 authentication:
-  - "username1:password1"
-  - "username2:password2"
-  - "username3:password3"
-  - "username4:password4"
-  - "username5:password5"
-  - "username6:password6"
+  - "CHANGE_ME_PROXY_USER:CHANGE_ME_PROXY_PASSWORD"
 skip-auth-prefixes:         # 设置跳过验证的 IP 段，某些来源地址可以跳过认证（仅在启用 authentication 时有意义）
   - 127.0.0.1/8
   - ::1/128
@@ -56,7 +56,7 @@ find-process-mode: off
 # -------------------------
 mode: rule                    # 规则模式：按 rules 中的规则分流
 log-level: info               # 日志等级 silent/error/warning/info/debug
-ipv6: true                    # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
+ipv6: true                    # 允许内核处理 IPv6；DNS AAAA 由 dns.ipv6 控制，不等于系统防火墙开关
 
 # -------------------------
 # 网络优化
@@ -80,18 +80,18 @@ geox-url:
   asn: "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb"     # GeoLite2-ASN.mmdb：ASN 数据库
 
 global-ua: "clash.meta"             # 外部资源下载时使用的 UA
-etag-support: false                 # 启用 ETag，减少重复下载
+etag-support: false                 # 当前关闭 ETag 条件请求支持
 
 # -------------------------
 # External Controller（MetaCubeXD 会连接这里）
-# 你 compose 里 MetaCubeXD 通过 http://192.168.2.60:9090 访问
-# 所以这里必须监听到外部地址，而不是只监听 127.0.0.1
+# 示例：独立面板通过 http://NAS_IP:9090 访问，按实际部署填写地址。
+# 当前监听所有 IPv4 接口，面板须能到达此端口；访问范围由部署网络和防火墙控制。
 # -------------------------
 external-controller: 0.0.0.0:9090           # RESTful API 监听地址
 
 # API 访问密钥（可选）
 # 建议你改成强密码，然后在 MetaCubeXD 中填写相同 secret
-secret: "A7kP9vM2xLqR8wT5nJ"                # `Authorization:Bearer ${secret}`
+secret: "CHANGE_ME_CONTROLLER_SECRET"    # 部署前生成独立随机密钥，面板填写相同值；不会自动生成
 
 # 控制接口的跨域访问配置
 # 因为 Web UI 可能与后端控制接口不在同一个来源上，所以通常要设置 CORS
@@ -113,7 +113,9 @@ profile:                          # 存储 select 选择记录
 
 # -------------------------------------------------
 # TUN 模式配置
-# 适合全局接管流量
+# 透明代理：应用正常连接，由路由/TUN/重定向导入内核后按规则分流。
+# Docker 需要 TUN 设备、网络权限及正确网络模式；容器 TUN 不自动接管宿主机或整个局域网。
+# 接管其他设备还需正确的网关、转发及回程路径；仅提供 7892 显式代理时可按 README 关闭 TUN。
 # Linux/NAS 环境中 auto-route 常用
 # auto-redirect 仅 Linux 支持
 # -------------------------------------------------
@@ -136,7 +138,7 @@ tun:
   auto-route: true                  # 配置路由表，自动设置全局路由，把流量导入 TUN 网卡
   auto-redirect: true               # Linux 下自动配置 iptables/nftables 做 TCP 重定向，且依赖 `auto-route`
   auto-detect-interface: true       # 自动识别出口网卡
-  mtu: 3000                         # 最大传输单元
+  # mtu: 3000  # 按实际网络测试后设置；未指定时使用当前内核默认值
   strict-route: true                # 开启严格路由模式
 
   # UDP NAT 行为
@@ -168,6 +170,13 @@ tun:
     # 广播地址
     - 255.255.255.255/32
 
+    # IPv6 本机回环、唯一本地地址（ULA）、链路本地地址和组播
+    - ::1/128
+    - fc00::/7
+    - fe80::/10
+    - ff00::/8
+    # 全球 IPv6 局域网前缀需按实际网络另行评估；排除路由不等于防火墙放行。
+
 # -------------------------------------------------
 # 嗅探（Sniffer）
 # 域名嗅探配置，可选配置
@@ -194,8 +203,8 @@ sniffer:
   parse-pure-ip: true
 
   # 是否使用嗅探出的域名覆盖原始连接目标
-  # true: 嗅探到域名后，用域名作为实际访问目标。好处是规则匹配更准确，适合大多数代理分流场景。
-  # false: 只用嗅探结果辅助规则判断，不改变实际连接目标。更保守稳妥，但部分域名规则命中效果可能变弱。 
+  # true：使用嗅探域名作为实际目标，可能改变原始服务器或 CDN 地址。
+  # false：保留原始连接目标，嗅探仍可辅助规则判断。
   override-destination: false
 
   # 具体嗅探协议配置
@@ -210,8 +219,8 @@ sniffer:
         - 80
         - 8080-8880
 
-      # 对 HTTP 流量，允许使用嗅探结果覆盖目标地址。（HTTP Host 通常比较明确，因此可以开启）
-      override-destination: true
+      # 保留原始连接目标，嗅探域名仅辅助规则判断。
+      override-destination: false
 
     # TLS / HTTPS 流量嗅探：主要读取 TLS ClientHello 中的 SNI 域名。
     TLS:
@@ -222,8 +231,8 @@ sniffer:
         - 443
         - 8443
 
-      # TLS SNI 通常可靠，建议开启覆盖。
-      override-destination: true
+      # 保留原始连接目标，嗅探域名仅辅助规则判断。
+      override-destination: false
 
     # QUIC / HTTP3 流量嗅探：主要用于基于 UDP 443 的 HTTP/3 / QUIC 连接。
     QUIC:
@@ -234,14 +243,14 @@ sniffer:
         - 443
         - 8443
 
-      # QUIC 场景比 TLS/HTTP 更容易受到客户端实现影响。可以先开启，后面遇到问题可以单独把这里改为 false 或在规则中处理 QUIC。
-      override-destination: true
+      # 保留原始连接目标，嗅探域名仅辅助规则判断。
+      override-destination: false
 
   # 强制嗅探的域名
   # 说明：
   #   一般情况下，sniffer 默认主要用于“只有 IP、缺少域名信息”的连接。
   #   force-domain 可以指定某些域名即使已有信息也强制嗅探。
-  force-domain:
+  # force-domain:
     # 示例：如果你发现某些域名经常无法正确分流，可以后续加在这里
     # - "+.example.com"
 
@@ -277,7 +286,7 @@ sniffer:
   # 跳过指定来源 IP 的嗅探
   # 作用：
   #   如果某台局域网设备不适合被嗅探，可以把它的 IP 加进来。
-  skip-src-address:
+  # skip-src-address:
     # - 192.168.2.100/32
 
   # 跳过指定目标 IP 的嗅探
@@ -375,7 +384,6 @@ dns:
     - "unifi"
     - "unifi.local"
     - "+.nas"
-    - "+.nas"
 
     # =================================================
     # 4. NTP 时间同步
@@ -399,7 +407,6 @@ dns:
     - "ntp5.*.com"
     - "ntp6.*.com"
     - "ntp7.*.com"
-    - "+.time.edu.cn"
     - "+.time.edu.cn"
     - "pool.ntp.org"
     - "+.pool.ntp.org"
@@ -494,9 +501,14 @@ dns:
   # 优先级高于普通 nameserver / fallback
   # --------------------------------------------------------
   nameserver-policy:
+    # 按实际本地域名需要启用，地址也须替换；.local 设备发现可能需要 mDNS。
+    # "+.lan":
+    #   - 192.168.50.1
+    # "+.home.arpa":
+    #   - 192.168.50.1
     # 私有域名 / 内网域名交给路由器或本地 DNS
     "geosite:private":
-      - 192.168.2.1                     # 此处填写主路由器 IP
+      - 192.168.50.1                      # 示例：替换为目标网络的本地 DNS，勿回指 Mihomo
 
     # 中国大陆公网域名使用国内 DNS
     # DoH + 普通 DNS 组合，提高稳定性
@@ -547,7 +559,7 @@ dns:
     - https://dns.qq.com/dns-query      # 腾讯 DoH
     - 180.76.76.76                      # 百度 DNS
 
-  fallback:                                     # 备用 DNS，当 nameserver 无响应时使用
+  fallback:  # 后备解析结果按筛选规则采用，并非仅在 nameserver 无响应时使用
     - 8.8.8.8                                   # Google DNS
     - 8.8.4.4                                   # Google DNS
     - https://dns.google/dns-query              # Google DoH
@@ -556,7 +568,7 @@ dns:
     - https://cloudflare-dns.com/dns-query      # Cloudflare DoH
 
   # 配置 fallback 使用条件
-  fallback-filter:
+  # fallback-filter:  # 需要自定义筛选条件时配置；省略不等于禁用默认筛选
 
 # -------------------------------------------------
 # 手动添加单个代理节点
@@ -566,17 +578,17 @@ proxies:
     type: socks5                                    # 节点类型，SOCKS5 代理
     dialer-proxy: chain-hop1-entry                  # 拨号代理（可选），如果这个节点需要通过另一个代理连接。
 
-    server: server                                  # 节点服务器地址（域名或 IP）
-    port: port                                      # 节点服务器端口
+    server: socks5.example.com                      # 示例服务器；部署前替换为实际域名或 IP
+    port: 1080                                      # 示例端口；部署前替换，保持整数
 
-    username: username                              # SOCKS5 验证用户名（如果需要）
-    password: password                              # SOCKS5 验证密码（如果需要）
+    username: "YOUR_SOCKS5_USERNAME"                # 示例用户名；无需认证时删除 username 和 password
+    password: "YOUR_SOCKS5_PASSWORD"                # 示例密码；不要将真实凭据提交到公共仓库
 
     ip-version: auto                                # IP 协议版本，ipv4 / ipv6 / auto
     udp: true                                       # 是否支持 UDP 转发（重要，视频/游戏需要开启）
-    interface-name: eth0                            # 本地网卡绑定（可选，用于多网卡场景）
+    # interface-name: eth0                            # 本地网卡绑定（可选，用于多网卡场景）
     tfo: false                                      # TCP Fast Open 开关（提高连接速度，可选）
-    mptcp: false                                    # 是否启用多路径 TCP（Multipath TCP，可提升吞吐量）
+    mptcp: false                                    # 是否启用多路径 TCP（Multipath TCP，可提升吞吐量)
 
 
 
@@ -587,6 +599,7 @@ proxies:
 # - 这里建议用 proxy-providers 管理你的机场/节点订阅，你的代理节点通过订阅链接添加
 # - 你必须把 url 改成你自己的订阅地址
 # -------------------------
+# 默认启用全部六个订阅：请填写全部链接，或同步停用对应 provider 与三个入口组的 use 引用。
 proxy-providers:
   my-subscription-1:
     type: http                                                          # 表示通过 HTTP 方式下载订阅内容
@@ -734,6 +747,14 @@ proxy-groups:
     proxies:
       - USA_Static_Native_ISP
 
+    # 检查完整链路：当前入口节点 → 住宅出口 → 测试网站。
+    # 住宅节点必须保留 dialer-proxy: chain-hop1-entry。
+    url: https://www.gstatic.com/generate_204
+    interval: 600                                   # 检查间隔，单位：秒
+    timeout: 10000                                  # 超时，单位：毫秒
+    lazy: false                                     # 住宅出口空闲时仍定期检查
+    expected-status: 204
+
   - name: chain-hop1-entry                          # 链式代理第1跳节点，入口节点
     type: select                                    # 手动选择节点
     proxies:
@@ -745,14 +766,14 @@ proxy-groups:
 
   - name: Manually Select Nodes
     type: select                                    # 手动选择节点
-    proxies:
+    proxies: []
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
   - name: Auto Select Nodes
     type: url-test                                  # 自动选择延迟最低的节点
@@ -761,14 +782,14 @@ proxy-groups:
     tolerance: 50                                   # 切换容忍度，单位毫秒。例如 tolerance: 50 表示新节点至少比当前节点快约 50ms 才更容易切换，可以减少频繁跳节点的情况，提供更稳定的体验。
     lazy: true                                      # 懒惰测试，只有该组被使用时才进行测试，可减少资源消耗
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
-    proxies:
+    proxies: []
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
   - name: Fallback
     type: fallback                                  # 自动回退：当前节点不可用时，自动切换到下一个可用节点
@@ -776,14 +797,14 @@ proxy-groups:
     interval: 600                                   # 每隔600秒测试一次
     lazy: true                                      # 懒惰测试，只有该组被使用时才进行测试，可减少资源消耗
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
-    proxies:
+    proxies: []
     use:
-      # - my-subscription-1
+      - my-subscription-1
       - my-subscription-2
       - my-subscription-3
-      # - my-subscription-4
-      # - my-subscription-5
-      # - my-subscription-6
+      - my-subscription-4
+      - my-subscription-5
+      - my-subscription-6
 
 # =========================================================================================
 
@@ -998,7 +1019,7 @@ rule-providers:
     behavior: domain
     format: mrs
     interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_domain.mrs
+    path: ./rule-providers/youtube_domain.mrs
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/youtube.mrs   # 远程规则集 URL
 
   google_domain:

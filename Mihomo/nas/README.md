@@ -1,6 +1,6 @@
 # Mihomo NAS Configuration
 
-This directory contains a Mihomo configuration template for **NAS**, **Docker**, **home server**, and **home gateway** environments.
+This directory contains the Mihomo configuration template **v2.1.2** for **NAS**, **Docker**, **home server**, and **home gateway** environments.
 
 It is designed for always-on Mihomo deployments, especially scenarios where Mihomo runs as a service and other devices on the LAN use it as a proxy gateway.
 
@@ -64,6 +64,21 @@ proxies:
 proxy-providers:
   # Replace this section with your own subscription providers
 ```
+
+Replace the residential SOCKS5 example before use; keep the port an integer and retain the entry link:
+
+```yaml
+proxies:
+  - name: USA_Static_Native_ISP
+    type: socks5
+    dialer-proxy: chain-hop1-entry
+    server: socks5.example.com
+    port: 1080
+    username: "YOUR_SOCKS5_USERNAME"
+    password: "YOUR_SOCKS5_PASSWORD"
+```
+
+This is a partial node example. Keep the template's other node fields. Example values are not a working residential service.
 
 For subscription-based usage, `proxy-providers` is usually recommended.
 
@@ -145,8 +160,7 @@ Example:
 
 ```yaml
 authentication:
-  - "username1:password1"
-  - "username2:password2"
+  - "CHANGE_ME_PROXY_USER:CHANGE_ME_PROXY_PASSWORD"
 skip-auth-prefixes:
   - 127.0.0.1/8
   - ::1/128
@@ -154,7 +168,7 @@ skip-auth-prefixes:
 
 Recommended practice:
 
-* Replace all example usernames and passwords before deployment.
+* Replace the single example inbound account before deployment; append accounts if multiple users are needed. Residential proxy credentials, inbound accounts and the controller secret serve separate purposes.
 * Keep `skip-auth-prefixes` limited to trusted local addresses.
 * Remember that `authentication` protects proxy ports, not the `external-controller` API.
 * Use `secret` for the dashboard and controller API.
@@ -195,7 +209,7 @@ Example:
 
 ```yaml
 external-controller: 0.0.0.0:9090
-secret: "replace-with-your-own-strong-secret"
+secret: "CHANGE_ME_CONTROLLER_SECRET"
 external-controller-cors:
   allow-origins:
     - "*"
@@ -204,7 +218,7 @@ external-controller-cors:
 
 Recommended practice:
 
-* Replace `secret` with a strong private value.
+* Replace `CHANGE_ME_CONTROLLER_SECRET` with an independently generated random private value; Mihomo does not generate a secret from this placeholder.
 * Use the same `secret` in your dashboard client.
 * Avoid exposing the controller port to the public Internet.
 * Restrict `external-controller-cors.allow-origins` if you use a known fixed dashboard origin.
@@ -277,6 +291,8 @@ Recommended practice:
 * Keep GEO auto-update enabled if your rule providers depend on current geosite or geoip data.
 * If memory is limited, `geodata-loader: memconservative` is usually a reasonable NAS default.
 
+`etag-support: false` keeps conditional ETag requests disabled. Top-level `ipv6` controls core IPv6 handling; `dns.ipv6` controls AAAA responses, and neither is a system-wide firewall switch. `use-hosts` reads configuration hosts; `use-system-hosts` reads hosts available in the runtime environment, which may be the container rather than the NAS host.
+
 ## Recommended Editing Areas
 
 In most cases, you should review these sections first:
@@ -333,6 +349,22 @@ Recommended practice:
 * If LAN access breaks, check `route-exclude-address`, `dns.fake-ip-filter`, and `rules`.
 * If the container fails to start, temporarily set `tun.enable` to `false` and check the logs.
 
+### Explicit Proxy and Transparent Proxy Deployment
+
+An explicit proxy is configured in an application (NAS address, port 7892 and inbound credentials). Transparent proxying uses routing/TUN/redirection to deliver otherwise normal application connections to Mihomo; rules still choose DIRECT or a proxy.
+
+| Scenario | Requirements |
+| --- | --- |
+| Only provide explicit port 7892 | Configure clients; TUN is normally unnecessary and may be disabled in the deployment copy |
+| Intercept the NAS's own traffic | TUN support, permissions and the correct network namespace |
+| Intercept other LAN devices | Traffic must traverse the NAS, with forwarding and valid return routes |
+
+The template retains transparent-proxy defaults. Docker commonly needs access to `/dev/net/tun` and the relevant network capability (such as `NET_ADMIN`), subject to the NAS platform. Choose the network mode deliberately: bridge routing affects the container namespace, while host-network operation has different host effects. Enabling TUN in a container does not automatically capture the host or every LAN client. Check routes, firewall behavior and forwarding instead of assuming a port mapping provides gateway operation. `auto-redirect` is a Linux feature; ordinary DNS hijacking does not guarantee capture of application-encrypted DNS.
+
+The fixed `mtu: 3000` is now commented out so the core default applies. No universal throughput improvement is assumed.
+
+The existing IPv4 route exclusions are extended with `::1/128`, `fc00::/7`, `fe80::/10` and `ff00::/8`. These preserve normal routing for loopback, ULA, link-local and multicast destinations; they do not grant firewall access. LAN devices may also use globally routed IPv6 prefixes, which need separate assessment. Keep the current IPv6 switches and verify actual IPv6 routes and local-service access; do not exclude all public IPv6 traffic.
+
 ## DNS Notes
 
 This template includes a detailed DNS section for NAS and LAN environments.
@@ -367,6 +399,8 @@ Recommended practice:
 * Keep private IP ranges in `skip-dst-address`.
 * Add specific client IPs to `skip-src-address` if one LAN device behaves abnormally.
 * If a service breaks after enabling TUN or sniffer, disable sniffer temporarily or add skip rules.
+
+Global and HTTP/TLS/QUIC `override-destination` are all explicitly `false`: sniffed domains may assist rule selection, while the original connection destination is retained. Existing protocol ports remain unchanged. Unused `force-domain` and `skip-src-address` examples are commented out.
 
 ## Security Notes
 
@@ -500,6 +534,93 @@ Download config.yaml
 -> Select proxy groups
 -> Test LAN clients and local services
 ```
+
+## Deployment Checklist and Local DNS
+
+Before importing a private deployment copy:
+
+1. Replace the residential server, integer port and credentials.
+2. Fill all six enabled subscriptions. To disable one, disable both its provider and its `use` entries in `Manually Select Nodes`, `Auto Select Nodes`, and `Fallback`.
+3. Replace `192.168.50.1` in `dns.nameserver-policy` with a DNS server that resolves private names in the **target deployment network**. Do not copy the generator computer's DNS settings into a different NAS network.
+4. Ensure that this upstream does not forward the same queries back to Mihomo and create a resolution loop.
+
+Changing only one subscription URL leaves the other enabled examples unresolved. Removing only a provider leaves invalid references; removing only its references leaves an unnecessary enabled provider.
+
+The commented `+.lan` and `+.home.arpa` policies are optional examples; replace their addresses too when enabling them. `.local` discovery commonly involves mDNS and cannot be guaranteed by ordinary DNS policies alone. Fake-IP exceptions return real addresses but do not themselves select DIRECT or prove WebRTC/UDP behavior.
+
+`fallback` also uses response filtering; it is not only a timeout backup. The empty `fallback-filter` is commented out. Omitting a custom filter does not disable the core's default fallback filtering.
+
+## Residential Chain Health Check
+
+The existing exit group now performs a non-lazy check every ten minutes:
+
+```yaml
+- name: chain-hop2-exit
+  type: select
+  proxies:
+    - USA_Static_Native_ISP
+  url: https://www.gstatic.com/generate_204
+  interval: 600
+  timeout: 10000
+  lazy: false
+  expected-status: 204
+```
+
+This is an item under `proxy-groups`, not an additional top-level section or a provider `health-check` block. Keep `dialer-proxy: chain-hop1-entry` on the residential node.
+
+```text
+Mihomo -> currently selected entry node -> residential SOCKS5 exit -> test website
+```
+
+`interval` is in seconds; `timeout` is in milliseconds. `lazy: false` enables periodic checks even while the residential exit is idle. Checks consume a small amount of subscription and residential traffic; they cannot complete while the core is stopped, the device sleeps or networking is unavailable.
+
+Testing the residential node uses its configured first hop. Testing a subscription node checks that entry only. The check does not enumerate every entry/exit combination. After an entry change, refresh the result because history may describe the previous entry. Node DNS resolution and subscription downloads retain their own configured paths.
+
+A successful result means that this request reached the test URL through the current chain and received HTTP 204. It does not prove the exit IP's residential status, fixed address, UDP support or availability of every business website. Failure can arise from the entry, residential authentication, DNS, connectivity, timeout or the test website itself.
+
+The group remains `select`: no direct bypass, automatic entry search, notification service or residential failover is added. The chosen entry group retains its existing selection behavior. Clients may display the result differently.
+
+### Manual Verification
+
+1. Use a private configuration copy with valid subscription and residential information. Load it, check for parse/reference errors, update providers, and record the current mode and selections.
+2. Set `chain-hop1-entry` to `Manually Select Nodes`, then select a concrete entry A. Check A's delay to establish an entry-only baseline.
+3. Run the client's **Mihomo HTTP delay test** for `USA_Static_Native_ISP`. Its `dialer-proxy` keeps the full chain active. Record delay, timeout or authentication errors; delay is not simply the sum of two network pings.
+4. During an interruptible test window, switch to `global`, select `chain-hop2-exit` or the residential node in `GLOBAL`, and keep entry A fixed. Query a trusted public-IP service through this Mihomo instance. Confirm the residential path in connection details and compare the result with the service provider's expected exit.
+5. Restore `rule` and the original selections. Test residential-routed services, domestic direct services and local NAS/router access; inspect the matched rule and final node. A failure only in rule mode points first to routing or selections.
+6. Test required UDP applications separately. HTTP/HTTPS delay and IP checks do not prove UDP support. Verify that UDP enters the core through a suitable SOCKS5 or TUN path and uses the intended exit; observe drops or interruptions.
+7. Repeat with entry B, compare results, then restore all original settings. Keep addresses, credentials and sensitive logs out of the public repository.
+
+On Windows/macOS, confirm that the browser enters the intended instance through system proxy, explicit proxy or TUN. For NAS testing, first use its explicit port 7892 and **NAS inbound** credentials. An HTTP proxy test does not cover arbitrary application UDP. Global-mode changes affect other new connections handled by that core; schedule NAS tests accordingly and open fresh connections after switching strategies.
+
+The residential `server` may be an access gateway and need not equal the exit IP. An entry IP in the result suggests an incorrect group/path; a local broadband IP suggests bypass or DIRECT. Neither conclusion replaces inspection of the actual request path. A public-IP query alone cannot establish residential classification or long-term address stability.
+
+| Entry | Entry test | Residential chain test | Exit IP | Business test | Time |
+| --- | --- | --- | --- | --- | --- |
+| A | Record locally | Record locally | Keep private | Record locally | Record locally |
+| B | Record locally | Record locally | Keep private | Record locally | Record locally |
+
+### Automatic Check Acceptance
+
+In an isolated deployment copy, verify successful checks with a fixed valid entry, result updates while the exit is idle, and failure with intentionally incorrect residential credentials. Confirm there is no residential bypass, restore valid credentials, and check recovery. Switch entries and refresh the result. Complete public-IP and business verification manually as above; never perform fault injection on a shared live profile.
+
+## First Start and Persistent Resources
+
+A fresh installation needs subscription data, remote rule sets and the GEO data actually referenced by DNS/rules. MRS routing rules do not remove the `geosite:private` and `geosite:cn` DNS dependencies.
+
+Provider paths are relative to the core's actual working/home directory (for example the directory configured by `-d`), not necessarily the YAML file's directory. The directory must be readable/writable as required. Persist the necessary configuration, provider/rule caches and selection/Fake-IP state when deploying NAS containers; inspect the service's real working directory and volume mapping.
+
+Keep the existing download strategies and resource URLs. For failures, distinguish DNS errors, unreachable subscription/GitHub resources, content errors and filesystem permissions. Do not route a first subscription download through nodes that have not yet been obtained.
+
+Verify a first start using an **independent empty working directory**, then a restart with its populated caches. Do not erase a live instance's cache for testing. Cached restart success is not evidence that a clean first download works.
+
+## Changes in v2.1.2 (2026-09-13)
+
+- N1/N2/N3: typed residential examples, explicit controller-secret placeholder and one inbound example account.
+- N5/N6/N7/N9: transparent-proxy deployment notes; four IPv6 route exclusions; protocol target overrides set to false; fixed MTU commented.
+- C1/C3/C4/C5/C6: local-DNS and six-subscription instructions; empty filter/options normalized; one duplicate each of `+.nas` and `+.time.edu.cn` removed. Other compatibility entries are retained pending proof of equivalent wildcard coverage.
+- C8/C9/C10: full residential chain checks, manual verification, cache guidance, synchronized comments and version.
+
+Implementation follows the [approved v4 plan](../../docs/change-plans/2026-09-13-mihomo-template-optimization-v4.md). Template version numbers are independent of plan versions. See the plan's implementation record for static validation results. Live Windows/macOS/NAS routing, subscription access, credentials, exit IP and UDP behavior require deployment verification; no tested client/core version is claimed here.
 
 ## Disclaimer
 

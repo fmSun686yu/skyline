@@ -5,16 +5,22 @@
 #   macOS 平台：Clash Verge 等
 #
 # 作者：fmSun686yu
-# 版本：v1.2.2
-# 日期：9.10.2026
+# 版本：v1.2.3
+# 日期：9.13.2026
 # ==============================================
+
+# 部署前检查：替换住宅节点凭据和全部已启用的六个订阅链接。
+# 停用订阅时，同时停用 provider 和 Manually Select Nodes / Auto Select Nodes / Fallback 的 use 引用。
+# dns.nameserver-policy 中 192.168.50.1 仅为示例，请填写目标部署网络的本地 DNS；勿回指 Mihomo 形成循环。
 
 # 端口配置
 port: 7890           # 本地 HTTP 代理端口
 socks-port: 7891     # 本地 SOCKS5 代理端口
 mixed-port: 7892     # 混合端口（HTTP + SOCKS5 合并端口）（可选）
-redir-port: 7893     # Linux / macOS 下的透明代理端口（可选）
-tproxy-port: 7894    # Linux TProxy 端口（可选）
+# macOS/Linux TCP 透明重定向入口，需配套系统重定向规则；常规 TUN 无需启用。
+# redir-port: 7893
+# 仅 Linux/Android 适用，Windows/macOS 不启用。
+# tproxy-port: 7894
 
 allow-lan: false                # 是否允许局域网设备使用代理
 bind-address: 127.0.0.1         # 绑定的网络接口，默认所有接口，此处限制为127.0.0.1增强安全
@@ -26,7 +32,9 @@ ipv6: false                      # 是否启用 IPv6
 
 unified-delay: true             # 是否开启全局统一延迟处理（开启可提高测速稳定性）
 
-find-process-mode: always       # Windows 上启用进程识别，供后面的 Edge 专用规则使用
+# 尝试识别本机连接所属进程，供连接信息展示和进程规则使用。
+# 识别结果取决于系统、权限与连接类型；本项不会自动添加进程分流规则。
+find-process-mode: always
 
 # GUI 缓存功能
 profile:
@@ -38,15 +46,15 @@ external-controller: '127.0.0.1:9090'   # 控制端口，Dashboard 和 REST API 
 secret: 'your_secret_here'              # 可选：用于 Dashboard 的访问密码
 
 # 日志配置
-log-level: info     # 可选：trace / debug / info / warning / error
+log-level: info     # 可选：silent / debug / info / warning / error
 
 # TUN 配置（全局透明代理）
 tun:
   enable: true                          # 是否开启 TUN 模式（虚拟网卡透明代理）
-  # 使用的 TUN 栈类型：system（系统默认），macOS/Windows 一般用 system
-  # TCP 使用系统栈、UDP 使用 gVisor，适合捕获 WebRTC UDP
+  # mixed：TCP 使用系统栈，UDP 使用 gVisor；适用于 Windows/macOS TUN 场景。
+  # 实际兼容性取决于系统权限、防火墙及客户端配置。
   stack: mixed
-  # mtu: 3000                             # TUN 网卡 MTU（最大传输单元），可提高大流量传输性能
+  # mtu: 3000  # 按实际网络测试后设置；未指定时使用当前内核默认值
   auto-route: true                      # 自动把系统 IPv4 流量路由到 TUN
   auto-detect-interface: true           # 自动识别 Wi-Fi/以太网等真实出口
   strict-route: true                    # Windows 下阻止多网卡 DNS 查询旁路
@@ -56,7 +64,7 @@ tun:
     - any:53
     - tcp://any:53
 
-  udp-timeout: 3000                     # WebRTC/UDP NAT 会话超时
+  udp-timeout: 300                      # UDP NAT 映射空闲过期时间，单位：秒
 
   endpoint-independent-nat: false       # 不开启 Endpoint-Independent NAT
 
@@ -66,7 +74,7 @@ tun:
 dns:
   enable: true                          # 是否启用 Clash 内置 DNS 解析
   cache-algorithm: arc                  # DNS 缓存算法，可选 lru / arc（ARC 更智能，高性能）
-  use-hosts: true                       # 是否启用 hosts 文件中自定义域名
+  use-hosts: true                       # 使用 config.yaml 顶层 hosts 中定义的域名映射
   use-system-hosts: false               # 是否使用系统 hosts 文件（Windows/macOS/Linux）
   respect-rules: true                   # 是否让 DNS 解析遵循 Clash 规则（true: 按规则分流解析）
   prefer-h3: false
@@ -81,6 +89,10 @@ dns:
   # fake-ip-range6: fdfe:dcba:9876::1/64  # IPv6 fake-ip 段（可选）
   fake-ip-filter-mode: blacklist        # fake-ip 过滤模式：blacklist 或 whitelist
   fake-ip-filter:                       # fake-ip 过滤列表
+    # 本地域名返回真实地址；不会自动改变路由，.local 发现可能还需 mDNS。
+    - 'localhost'
+    - '+.local'
+    - '+.home.arpa'
     - '*.lan'                           # 匹配 *.lan 域名，不使用 fake-ip
     - 'time.windows.com'
     - 'time.apple.com'
@@ -184,9 +196,14 @@ dns:
   # 优先级高于普通 nameserver / fallback
   # --------------------------------------------------------
   nameserver-policy:
+    # 按实际本地域名需要启用，地址也须替换；.local 设备发现可能需要 mDNS。
+    # "+.lan":
+    #   - 192.168.50.1
+    # "+.home.arpa":
+    #   - 192.168.50.1
     # 私有域名 / 内网域名交给路由器或本地 DNS
     "geosite:private":
-      - 192.168.50.1                      # 此处填写主路由器 IP
+      - 192.168.50.1                      # 示例：替换为目标网络的本地 DNS，勿回指 Mihomo
 
     # 中国大陆公网域名使用国内 DNS
     # DoH + 普通 DNS 组合，提高稳定性
@@ -234,7 +251,7 @@ dns:
     - https://dns.qq.com/dns-query      # 腾讯 DoH
     - 180.76.76.76                      # 百度 DNS
 
-  fallback:                             # 备用 DNS，当 nameserver 无响应时使用
+  fallback:  # 后备解析结果按筛选规则采用，并非仅在 nameserver 无响应时使用
     - 8.8.8.8                                   # Google DNS
     - 8.8.4.4                                   # Google DNS
     - https://dns.google/dns-query              # Google DoH
@@ -242,7 +259,7 @@ dns:
     - 1.0.0.1                                   # Cloudflare DNS
     - https://cloudflare-dns.com/dns-query      # Cloudflare DoH
 
-  fallback-filter:                      # 备用 DNS 过滤条件，用于选择哪些域名走 fallback
+  # fallback-filter:  # 需要自定义筛选条件时配置；省略不等于禁用默认筛选
 
 # sniffing:
 #   enable: true                # 是否开启嗅探模式（自动分流）
@@ -256,11 +273,11 @@ proxies:
     type: socks5                                    # 节点类型，SOCKS5 代理
     dialer-proxy: chain-hop1-entry                  # 拨号代理（可选），如果这个节点需要通过另一个代理连接。
 
-    server: socks5.example.com                        # 示例 SOCKS5 服务器；请替换为实际域名或 IP
-    port: 1080                                        # 示例 SOCKS5 端口；请替换为实际端口
+    server: socks5.example.com                      # 示例 SOCKS5 服务器；请替换为实际域名或 IP
+    port: 1080                                      # 示例 SOCKS5 端口；请替换为实际端口
 
-    username: "YOUR_SOCKS5_USERNAME"                 # 示例用户名；无需认证时请删除 username 和 password
-    password: "YOUR_SOCKS5_PASSWORD"                 # 示例密码；公开仓库中请勿提交真实凭据
+    username: "YOUR_SOCKS5_USERNAME"                # 示例用户名；无需认证时请删除 username 和 password
+    password: "YOUR_SOCKS5_PASSWORD"                # 示例密码；公开仓库中请勿提交真实凭据
 
     ip-version: ipv4-prefer                         # IP 协议版本，ipv4 / ipv6 / auto
     udp: true                                       # 是否支持 UDP 转发（重要，视频/游戏需要开启）
@@ -271,6 +288,7 @@ proxies:
 # ============================================================
 # 节点订阅提供者（Proxy Providers）
 # ============================================================
+# 默认启用全部六个订阅：请填写全部链接，或同步停用对应 provider 与三个入口组的 use 引用。
 proxy-providers:
   my-subscription-1:
     type: http
@@ -389,6 +407,14 @@ proxy-groups:
     proxies:
       - USA_Static_Native_ISP
 
+    # 检查完整链路：当前入口节点 → 住宅出口 → 测试网站。
+    # 住宅节点必须保留 dialer-proxy: chain-hop1-entry。
+    url: https://www.gstatic.com/generate_204
+    interval: 600                                   # 检查间隔，单位：秒
+    timeout: 10000                                  # 超时，单位：毫秒
+    lazy: false                                     # 住宅出口空闲时仍定期检查
+    expected-status: 204
+
   - name: chain-hop1-entry                          # 链式代理第1跳节点，入口节点
     type: select                                    # 手动选择节点
     proxies:
@@ -400,7 +426,7 @@ proxy-groups:
 
   - name: Manually Select Nodes
     type: select                                    # 手动选择节点
-    proxies:
+    proxies: []
     use:
       - my-subscription-1
       - my-subscription-2
@@ -416,7 +442,7 @@ proxy-groups:
     tolerance: 50                                   # 切换容忍度，单位毫秒。例如 tolerance: 50 表示新节点至少比当前节点快约 50ms 才更容易切换，可以减少频繁跳节点的情况，提供更稳定的体验。
     lazy: true                                      # 懒惰测试，只有该组被使用时才进行测试，可减少资源消耗
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
-    proxies:
+    proxies: []
     use:
       - my-subscription-1
       - my-subscription-2
@@ -431,7 +457,7 @@ proxy-groups:
     interval: 600                                   # 每隔600秒测试一次
     lazy: true                                      # 懒惰测试，只有该组被使用时才进行测试，可减少资源消耗
     expected-status: 204                            # 预期响应状态码，只有当测试 URL 返回这个状态码时才认为节点可用
-    proxies:
+    proxies: []
     use:
       - my-subscription-1
       - my-subscription-2
@@ -653,7 +679,7 @@ rule-providers:
     behavior: domain
     format: mrs
     interval: 28800                                   # 每隔28800秒（8小时）更新规则集
-    path: ./rule-providers/google_domain.mrs
+    path: ./rule-providers/youtube_domain.mrs
     url: https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/youtube.mrs   # 远程规则集 URL
 
   google_domain:

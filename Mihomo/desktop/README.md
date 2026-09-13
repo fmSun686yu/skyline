@@ -1,6 +1,6 @@
 # Mihomo Desktop Configuration
 
-This directory contains the Mihomo desktop configuration template **v1.2.2** for clients on **Windows** and **macOS**.
+This directory contains the Mihomo desktop configuration template **v1.2.3** for clients on **Windows** and **macOS**.
 
 It is designed for Mihomo-compatible desktop clients such as:
 
@@ -11,7 +11,7 @@ It is designed for Mihomo-compatible desktop clients such as:
 
 This template does **not** include real proxy nodes, credentials, or subscription URLs. The SOCKS5 node and six HTTP subscription providers are placeholders; replace or remove them before importing the configuration into your client.
 
-The current defaults use rule mode, prefer IPv4, enable Windows process detection, and enable TUN with a mixed stack, automatic routing, interface detection, strict routing, and DNS hijacking.
+The current defaults use rule mode, prefer IPv4, enable local process detection on Windows/macOS, and enable TUN with a mixed stack, automatic routing, interface detection, strict routing, and DNS hijacking.
 
 ## File Structure
 
@@ -228,6 +228,8 @@ Recommended practice:
 * Keep `bind-address: 127.0.0.1` for better local-only safety.
 * Enable LAN access only when you intentionally want other devices to use this desktop client as a proxy.
 
+The common template leaves `redir-port` and `tproxy-port` commented out. macOS can use the redir TCP listener only with matching system redirection rules; tproxy is Linux/Android-only. Neither listener is required for TUN. HTTP 7890, SOCKS 7891 and mixed 7892 remain available.
+
 ## Dashboard Notes
 
 The template includes a local controller for compatible dashboards and client UI integrations.
@@ -285,7 +287,7 @@ tun:
   dns-hijack:
     - any:53
     - tcp://any:53
-  udp-timeout: 3000
+  udp-timeout: 300
   endpoint-independent-nat: false
 ```
 
@@ -298,6 +300,8 @@ Recommended practice:
 * On Windows and macOS, make sure the client has the required network permissions.
 * If TUN mode causes network issues, disable it and check the client logs. You can also test whether `strict-route` or DNS hijacking conflicts with other VPN, DNS, or security software.
 
+`udp-timeout: 300` means 300 seconds of idle UDP NAT mapping lifetime, not a five-minute maximum for all active UDP connections.
+
 ## Process Detection Notes
 
 The template enables process detection by default:
@@ -306,7 +310,7 @@ The template enables process detection by default:
 find-process-mode: always
 ```
 
-This setting is intended for process-based routing on Windows. It may add lookup overhead or behave differently across clients and platforms, so set it to a mode supported by your client if you do not need process matching.
+`always` is retained to attempt local process identification for connection details and process rules. Recognition depends on platform, permissions and connection type, and can fail. It does not add process routing rules automatically. Windows and macOS process names/paths may differ; no Edge-specific process rule is currently defined.
 
 ## Rule Provider Notes
 
@@ -427,6 +431,92 @@ Select proxy group
         ↓
 Test connectivity
 ```
+
+## Deployment Checklist and Local DNS
+
+Before importing a private deployment copy:
+
+1. Replace the residential server, integer port and credentials.
+2. Fill all six enabled subscriptions. To disable one, disable both its provider and its `use` entries in `Manually Select Nodes`, `Auto Select Nodes`, and `Fallback`.
+3. Replace `192.168.50.1` in `dns.nameserver-policy` with a DNS server that resolves private names in the **target deployment network**. Do not copy the generator computer's DNS settings into a different NAS network.
+4. Ensure that this upstream does not forward the same queries back to Mihomo and create a resolution loop.
+
+Changing only one subscription URL leaves the other enabled examples unresolved. Removing only a provider leaves invalid references; removing only its references leaves an unnecessary enabled provider.
+
+The commented `+.lan` and `+.home.arpa` policies are optional examples; replace their addresses too when enabling them. `.local` discovery commonly involves mDNS and cannot be guaranteed by ordinary DNS policies alone. Fake-IP exceptions return real addresses but do not themselves select DIRECT or prove WebRTC/UDP behavior.
+
+`fallback` also uses response filtering; it is not only a timeout backup. The empty `fallback-filter` is commented out. Omitting a custom filter does not disable the core's default fallback filtering.
+
+## Residential Chain Health Check
+
+The existing exit group now performs a non-lazy check every ten minutes:
+
+```yaml
+- name: chain-hop2-exit
+  type: select
+  proxies:
+    - USA_Static_Native_ISP
+  url: https://www.gstatic.com/generate_204
+  interval: 600
+  timeout: 10000
+  lazy: false
+  expected-status: 204
+```
+
+This is an item under `proxy-groups`, not an additional top-level section or a provider `health-check` block. Keep `dialer-proxy: chain-hop1-entry` on the residential node.
+
+```text
+Mihomo -> currently selected entry node -> residential SOCKS5 exit -> test website
+```
+
+`interval` is in seconds; `timeout` is in milliseconds. `lazy: false` enables periodic checks even while the residential exit is idle. Checks consume a small amount of subscription and residential traffic; they cannot complete while the core is stopped, the device sleeps or networking is unavailable.
+
+Testing the residential node uses its configured first hop. Testing a subscription node checks that entry only. The check does not enumerate every entry/exit combination. After an entry change, refresh the result because history may describe the previous entry. Node DNS resolution and subscription downloads retain their own configured paths.
+
+A successful result means that this request reached the test URL through the current chain and received HTTP 204. It does not prove the exit IP's residential status, fixed address, UDP support or availability of every business website. Failure can arise from the entry, residential authentication, DNS, connectivity, timeout or the test website itself.
+
+The group remains `select`: no direct bypass, automatic entry search, notification service or residential failover is added. The chosen entry group retains its existing selection behavior. Clients may display the result differently.
+
+### Manual Verification
+
+1. Use a private configuration copy with valid subscription and residential information. Load it, check for parse/reference errors, update providers, and record the current mode and selections.
+2. Set `chain-hop1-entry` to `Manually Select Nodes`, then select a concrete entry A. Check A's delay to establish an entry-only baseline.
+3. Run the client's **Mihomo HTTP delay test** for `USA_Static_Native_ISP`. Its `dialer-proxy` keeps the full chain active. Record delay, timeout or authentication errors; delay is not simply the sum of two network pings.
+4. During an interruptible test window, switch to `global`, select `chain-hop2-exit` or the residential node in `GLOBAL`, and keep entry A fixed. Query a trusted public-IP service through this Mihomo instance. Confirm the residential path in connection details and compare the result with the service provider's expected exit.
+5. Restore `rule` and the original selections. Test residential-routed services, domestic direct services and local NAS/router access; inspect the matched rule and final node. A failure only in rule mode points first to routing or selections.
+6. Test required UDP applications separately. HTTP/HTTPS delay and IP checks do not prove UDP support. Verify that UDP enters the core through a suitable SOCKS5 or TUN path and uses the intended exit; observe drops or interruptions.
+7. Repeat with entry B, compare results, then restore all original settings. Keep addresses, credentials and sensitive logs out of the public repository.
+
+On Windows/macOS, confirm that the browser enters the intended instance through system proxy, explicit proxy or TUN. For NAS testing, first use its explicit port 7892 and **NAS inbound** credentials. An HTTP proxy test does not cover arbitrary application UDP. Global-mode changes affect other new connections handled by that core; schedule NAS tests accordingly and open fresh connections after switching strategies.
+
+The residential `server` may be an access gateway and need not equal the exit IP. An entry IP in the result suggests an incorrect group/path; a local broadband IP suggests bypass or DIRECT. Neither conclusion replaces inspection of the actual request path. A public-IP query alone cannot establish residential classification or long-term address stability.
+
+| Entry | Entry test | Residential chain test | Exit IP | Business test | Time |
+| --- | --- | --- | --- | --- | --- |
+| A | Record locally | Record locally | Keep private | Record locally | Record locally |
+| B | Record locally | Record locally | Keep private | Record locally | Record locally |
+
+### Automatic Check Acceptance
+
+In an isolated deployment copy, verify successful checks with a fixed valid entry, result updates while the exit is idle, and failure with intentionally incorrect residential credentials. Confirm there is no residential bypass, restore valid credentials, and check recovery. Switch entries and refresh the result. Complete public-IP and business verification manually as above; never perform fault injection on a shared live profile.
+
+## First Start and Persistent Resources
+
+A fresh installation needs subscription data, remote rule sets and the GEO data actually referenced by DNS/rules. MRS routing rules do not remove the `geosite:private` and `geosite:cn` DNS dependencies.
+
+Provider paths are relative to the core's actual working/home directory (for example the directory configured by `-d`), not necessarily the YAML file's directory. The directory must be readable/writable as required. Persist the necessary configuration, provider/rule caches and selection/Fake-IP state when deploying NAS containers; inspect the service's real working directory and volume mapping.
+
+Keep the existing download strategies and resource URLs. For failures, distinguish DNS errors, unreachable subscription/GitHub resources, content errors and filesystem permissions. Do not route a first subscription download through nodes that have not yet been obtained.
+
+Verify a first start using an **independent empty working directory**, then a restart with its populated caches. Do not erase a live instance's cache for testing. Cached restart success is not evidence that a clean first download works.
+
+## Changes in v1.2.3 (2026-09-13)
+
+- D1/D3/D4: platform-specific listeners commented, `always` retained with corrected notes, UDP idle timeout reduced to 300 seconds.
+- C1/C3/C4/C5/C6: local-DNS and six-subscription instructions; empty fallback filter commented; `localhost`, `+.local`, `+.home.arpa` added to Fake-IP exceptions; empty group node lists made explicit.
+- C8/C9/C10: full residential chain checks, verification and cache documentation, synchronized comments and version.
+
+Implementation follows the [approved v4 plan](../../docs/change-plans/2026-09-13-mihomo-template-optimization-v4.md). Template version numbers are independent of plan versions. See the plan's implementation record for static validation results. Live Windows/macOS/NAS routing, subscription access, credentials, exit IP and UDP behavior require deployment verification; no tested client/core version is claimed here.
 
 ## Disclaimer
 
