@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "softwareVersion": "0.1.0-s02",
+  "templates": [
+    {
+      "id": "desktop",
+      "version": "1.2.3",
+      "resourceName": "Skyline.Templates.desktop.yaml",
+      "sha256": "7AEFB272E8F095B5EE69E374982BE61A62F774DD367884C2265F59E106588660",
+      "residentialProxyName": "USA_Static_Native_ISP",
+      "subscriptionSlots": [
+        "my-subscription-1",
+        "my-subscription-2",
+        "my-subscription-3",
+        "my-subscription-4",
+        "my-subscription-5",
+        "my-subscription-6"
+      ],
+      "contractVersion": 1,
+      "entryGroup": "chain-hop1-entry",
+      "exitGroup": "chain-hop2-exit",
+      "requiredEnvironmentFields": [
+        "localDns"
+      ]
+    },
+    {
+      "id": "nas",
+      "version": "2.1.2",
+      "resourceName": "Skyline.Templates.nas.yaml",
+      "sha256": "5379A7ADE11AB9E1B827D851772436ABD3F7A3B840A22092F537667BC04D21A3",
+      "residentialProxyName": "USA_Static_Native_ISP",
+      "subscriptionSlots": [
+        "my-subscription-1",
+        "my-subscription-2",
+        "my-subscription-3",
+        "my-subscription-4",
+        "my-subscription-5",
+        "my-subscription-6"
+      ],
+      "contractVersion": 1,
+      "entryGroup": "chain-hop1-entry",
+      "exitGroup": "chain-hop2-exit",
+      "requiredEnvironmentFields": [
+        "localDns"
+      ]
+    }
+  ]
+}

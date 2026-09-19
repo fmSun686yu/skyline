@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="ProductName" xml:space="preserve"><value>Skyline Configurator</value></data>
+  <data name="Stage" xml:space="preserve"><value>S02 / CORE PREVIEW</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>Configuration starts with a trusted template.</value></data>
+  <data name="VersionFormat" xml:space="preserve"><value>Software {0}  ·  English (United States)</value></data>
+  <data name="ReadyTitle" xml:space="preserve"><value>Built-in templates verified</value></data>
+  <data name="ReadyBody" xml:space="preserve"><value>Both templates match the versions and SHA-256 hashes bundled with this software.</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>Built-in templates unavailable</value></data>
+  <data name="ErrorBody" xml:space="preserve"><value>The bundled resources could not be verified. Download a complete copy of this software version.</value></data>
+  <data name="DiagnosticFormat" xml:space="preserve"><value>Diagnostic: {0}</value></data>
+  <data name="TemplatesHeading" xml:space="preserve"><value>Included templates</value></data>
+  <data name="DesktopName" xml:space="preserve"><value>Windows desktop</value></data>
+  <data name="NasName" xml:space="preserve"><value>NAS</value></data>
+  <data name="TemplateVersionFormat" xml:space="preserve"><value>Template v{0}</value></data>
+  <data name="SlotsFormat" xml:space="preserve"><value>Up to {0} subscription links · SOCKS5 residential proxy</value></data>
+  <data name="HashLabel" xml:space="preserve"><value>SHA-256</value></data>
+  <data name="BoundaryTitle" xml:space="preserve"><value>Foundation only</value></data>
+  <data name="BoundaryBody" xml:space="preserve"><value>The configuration engine is available for testing. Configuration forms, file saving and additional languages will be delivered in later approved stages.</value></data>
+  <data name="Footer" xml:space="preserve"><value>Embedded resources only · No repository or network access at runtime</value></data>
+</root>

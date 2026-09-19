@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Skyline.Core/Skyline.Core.csproj" />
+    <EmbeddedResource Include="../../Mihomo/manifest.json" LogicalName="Skyline.Templates.manifest.json" />
+    <EmbeddedResource Include="../../Mihomo/desktop/config.yaml" LogicalName="Skyline.Templates.desktop.yaml" />
+    <EmbeddedResource Include="../../Mihomo/nas/config.yaml" LogicalName="Skyline.Templates.nas.yaml" />
+    <InternalsVisibleTo Include="Skyline.Infrastructure.Tests" />
+  </ItemGroup>
+</Project>

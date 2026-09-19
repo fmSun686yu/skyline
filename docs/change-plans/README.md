@@ -18,5 +18,11 @@
 | 日期 | 方案 | 范围 | 状态 |
 | --- | --- | --- | --- |
 | 2026-09-13 | [Mihomo desktop / NAS 模板修改优化方案 v4](2026-09-13-mihomo-template-optimization-v4.md) | 两套 Mihomo 模板及其 README | 模板及 README 已实施，静态校验通过；运行环境验证待完成 |
+| 2026-09-18 | [Skyline Configurator 软件设计方案 v2](2026-09-18-skyline-configurator-design-v2.md) | Windows 11 图形化配置生成器、模板契约、验证与发布流程 | 历史方案，由 v3 替代；软件未开发 |
+| 2026-09-18 | [Skyline Configurator 软件设计方案 v3](2026-09-18-skyline-configurator-design-v3.md) | 每次填写 DNS、软件版本绑定内置模板、自包含 ZIP 便携版及关联设计 | 历史方案，由 v4 替代；软件未开发 |
+| 2026-09-18 | [Skyline Configurator 软件设计方案 v4](2026-09-18-skyline-configurator-design-v4.md) | 六语界面、默认美式英语、语言切换与本地化验收；保留 v3 设计 | 历史方案，由 v5 替代；软件未开发 |
+| 2026-09-18 | [Skyline Configurator 软件设计方案 v5](2026-09-18-skyline-configurator-design-v5.md) | 移除高级网络设置、基础表单自动及手动管理凭据；保留 v4 其他设计 | 用户已审核通过；S02 已实施，成果待审核 |
+| 2026-09-18 | [Skyline Configurator 分阶段开发计划 v1](2026-09-18-skyline-development-stages-v1.md) | S01–S07 阶段范围、交付物、验收与逐阶段审核流程 | S02 验证通过、待审核；S03–S07 未开始 |
+| 2026-09-18 | [S02 配置生成核心实施记录 v1](2026-09-18-skyline-s02-implementation-v1.md) | 输入校验、YAML 生成、静态检查、脱敏摘要及样例 | 已实施，290 项检查通过，待审核 |
 
 本目录中的首份方案直接归档为 v4，依据此前逐项审阅形成的第四版方案；未另行补建前三版文件。

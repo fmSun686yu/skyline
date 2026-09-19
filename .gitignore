@@ -9,3 +9,21 @@
 
 # Ignore environment variable files
 .env
+
+# Local development tools and generated artifacts
+.tools/
+.dotnet-home/
+.nuget/
+artifacts/
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# Private deployment/test inputs; public template YAML remains tracked
+private/
+**/config.local.yaml
+**/config.private.yaml
+**/subscription.txt
+**/secret.yaml

@@ -2,7 +2,13 @@
 
 Skyline is a personal configuration templates repository for **Mihomo** and **Shadowrocket**, used to manage reusable proxy configuration templates for desktop, NAS, and iOS-style client environments.
 
-This repository does **not** provide proxy nodes, subscription services, or any third-party network service. It only stores configuration templates.
+This repository does **not** provide proxy nodes, subscription services, or any third-party network service. It contains configuration templates and the Skyline Configurator project.
+
+## Skyline Configurator (S02 preview)
+
+The Windows 11 application embeds and verifies the desktop and NAS templates. S02 adds a separately testable configuration engine and fictional output samples. The English status window remains a preview; configuration forms and file saving are planned for later approved stages.
+
+See the [development guide](docs/development.md), [S02 verification report](docs/stages/S02-report.md), [core API guide](docs/s02-core.md), and [approved product design](docs/change-plans/2026-09-18-skyline-configurator-design-v5.md).
 
 ## Repository Structure
 
